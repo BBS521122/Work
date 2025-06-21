@@ -1,5 +1,7 @@
 package com.work.work.dto.user;
 
+import org.simpleframework.xml.core.Validate;
+
 public class UserLoginDTO {
     private String username;
     private String password;

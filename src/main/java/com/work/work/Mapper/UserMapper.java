@@ -23,4 +23,13 @@ public interface UserMapper {
 
     @Update("update test_union.user set password = #{encodedPassword} where id = #{id}")
     int updatePassword(int id, String encodedPassword);
+
+    @Update("update test_union.user set " +
+            "gender=#{gender},state=#{state},department=#{department}," +
+            "phone=#{phone},role=#{role},post=#{role} " +
+            "where id=#{id}")
+    int updateUser(User user);
+
+    @Delete("delete from test_union.user where id = #{id}")
+    int deleteUser(long id);
 }
