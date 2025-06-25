@@ -45,7 +45,7 @@ public class MinioServiceImpl implements MinioService {
     }
 
     @Override
-    public String getSignedAvatarUrl(String objectName) {
+    public String getSignedUrl(String objectName) {
         // 检查文件是否存在
         if (!objectExists(objectName)) {
             throw new RuntimeException("Avatar object not found");
