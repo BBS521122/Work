@@ -44,4 +44,8 @@ public interface DepartmentMapper {
     List<Department> searchDepartments(
             @Param("deptName") String deptName,
             @Param("status") Integer status);
+
+    @Select("SELECT * FROM sys_department WHERE parentId = #{parentId}")
+    List<Department> getDepartmentsByParentId(Long parentId);
+
 }
