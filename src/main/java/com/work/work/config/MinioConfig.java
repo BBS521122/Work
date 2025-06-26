@@ -1,4 +1,4 @@
-package com.work.work.Config;
+package com.work.work.config;
 
 import com.work.work.properties.MinioProperties;
 import io.minio.MinioClient;

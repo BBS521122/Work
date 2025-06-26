@@ -1,7 +1,6 @@
-package com.work.work.Mapper.Impl;
+package com.work.work.mapper.Impl;
 
-import com.work.work.Mapper.RedisTokenMapper;
-import org.apache.ibatis.annotations.Mapper;
+import com.work.work.mapper.RedisTokenMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;

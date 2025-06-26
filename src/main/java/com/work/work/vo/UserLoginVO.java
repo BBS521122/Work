@@ -4,16 +4,16 @@ import com.work.work.enums.RoleEnum;
 
 public class UserLoginVO {
     private Long id;
-    private String username;
+    private String name;
     private String token;
     private RoleEnum role;
 
     public UserLoginVO() {
     }
 
-    public UserLoginVO(Long id, String username, String token, RoleEnum role) {
+    public UserLoginVO(Long id, String name, String token, RoleEnum role) {
         this.id = id;
-        this.username = username;
+        this.name = name;
         this.token = token;
         this.role = role;
     }
@@ -27,11 +27,11 @@ public class UserLoginVO {
     }
 
     public String getUsername() {
-        return username;
+        return name;
     }
 
     public void setUsername(String username) {
-        this.username = username;
+        this.name = username;
     }
 
     public String getToken() {
