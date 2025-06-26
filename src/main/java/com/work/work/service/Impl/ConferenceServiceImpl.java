@@ -113,8 +113,19 @@ public class ConferenceServiceImpl implements ConferenceService {
         String oldCoverName = oldConference.getCover();
         List<String> oldMediaNames = conferenceMediaMapper.selectMediaNamesByConferenceId(conference.getId());
 
-        // 上传新的 cover
-        String newCoverName = minioService.uploadFile(cover);
+        // 判断 cover 是否为空
+        String newCoverName;
+        if (cover == null || cover.isEmpty()) {
+            // 为空则用旧的 cover
+            newCoverName = oldConference.getCover();
+        } else {
+            // 不为空则上传新 cover
+            newCoverName = minioService.uploadFile(cover);
+            // 只有上传新 cover 时才删除旧 cover
+            if (oldConference.getCover() != null) {
+                minioService.deleteFile(oldConference.getCover());
+            }
+        }
         conference.setCover(newCoverName);
 
         // 更新 Conference 数据
@@ -129,10 +140,6 @@ public class ConferenceServiceImpl implements ConferenceService {
         // 绑定新的媒体信息
         Integer bindRes = conferenceMediaMapper.bindMedia(uuid, conference.getId());
 
-        // 数据库操作成功后再删除旧文件
-        if (oldCoverName != null) {
-            minioService.deleteFile(oldCoverName);
-        }
         for (String oldMediaName : oldMediaNames) {
             minioService.deleteFile(oldMediaName);
         }

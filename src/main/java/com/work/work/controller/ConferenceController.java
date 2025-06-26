@@ -47,7 +47,7 @@ public class ConferenceController {
      * @return
      */
     @PostMapping("/update")
-    public HttpResponseEntity<Integer> update(@RequestPart("data") ConferenceUpdateDTO conferenceUpdateDTO, @RequestPart("cover") MultipartFile cover) {
+    public HttpResponseEntity<Integer> update(@RequestPart("data") ConferenceUpdateDTO conferenceUpdateDTO, @RequestPart(value = "cover",required = false) MultipartFile cover) {
         Conference conference = conferenceConverter.conferenceUpdateDTOToConference(conferenceUpdateDTO);
         Integer res = conferenceService.update(conference, cover, conferenceUpdateDTO.getUuid());
         return new HttpResponseEntity<>(200, res, "success");
