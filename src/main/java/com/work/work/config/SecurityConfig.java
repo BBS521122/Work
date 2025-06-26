@@ -1,4 +1,4 @@
-package com.work.work.Config;
+package com.work.work.config;
 
 import com.work.work.fliter.JwtFliter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,9 +70,8 @@ public class SecurityConfig {
                 sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).
                 authorizeHttpRequests(authorizeHttpRequests ->
                         authorizeHttpRequests
-                                .requestMatchers("/user/login", "/user/add").permitAll()
+                                .requestMatchers("/user/login", "/user/register").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")// 允许匿名访问登录接口
-                                .requestMatchers("/teacher/**").hasRole("TEACHER")
                                 .anyRequest().authenticated() // 其他请求需要认证
                 ).addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

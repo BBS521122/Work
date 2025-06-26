@@ -15,14 +15,14 @@ public class User {
     private String phone;
     private String role;
     private String post;
-    private String photo;
+    private String avatar;
     private String nickname;
 
 
     public User() {
     }
 
-    public User(long id, String name, String gender, String password, String state, String department, String email, Date time, String phone, String role, String post, String photo, String nickname) {
+    public User(long id, String name, String gender, String password, String state, String department, String email, Date time, String phone, String role, String post, String avatar, String nickname) {
         this.id = id;
         this.name = name;
         this.gender = gender;
@@ -34,7 +34,7 @@ public class User {
         this.phone = phone;
         this.role = role;
         this.post = post;
-        this.photo = photo;
+        this.avatar = avatar;
         this.nickname = nickname;
     }
 
@@ -126,12 +126,12 @@ public class User {
         this.post = post;
     }
 
-    public String getPhoto() {
-        return photo;
+    public String getAvatar() {
+        return avatar;
     }
 
-    public void setPhoto(String photo) {
-        this.photo = photo;
+    public void setAvatar(String avatar) {
+        this.avatar = avatar;
     }
 
     public String getNickname() {

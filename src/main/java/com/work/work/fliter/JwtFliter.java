@@ -4,8 +4,8 @@ import com.auth0.jwt.interfaces.Claim;
 import com.work.work.constant.JwtClaimsConstant;
 import com.work.work.context.UserContext;
 import com.work.work.enums.RoleEnum;
-import com.work.work.Mapper.RedisTokenMapper;
-import com.work.work.Mapper.UserMapper;
+import com.work.work.mapper.RedisTokenMapper;
+import com.work.work.mapper.sql.UserMapper;
 import com.work.work.properties.JwtProperties;
 import com.work.work.security.UserDetailsImpl;
 import com.work.work.utils.JwtUtils;
@@ -100,7 +100,7 @@ public class JwtFliter extends OncePerRequestFilter {
             String roleName = (String) map.get(JwtClaimsConstant.ROLE);
             RoleEnum role = RoleEnum.valueOf(roleName);
             // 存入ThreadLocal
-            int id = (int) map.get(JwtClaimsConstant.ID);
+            long id = ((Number) map.get(JwtClaimsConstant.ID)).longValue();
             UserContext.setUserId(id);
 
             // 根据用户名创建 UserDetailsImp 对象

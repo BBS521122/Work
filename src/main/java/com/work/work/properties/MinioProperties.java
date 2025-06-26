@@ -33,7 +33,7 @@ public class MinioProperties {
     private String bucket;
 
     private long partSize;
-    private Duration urlExpiry = Duration.ofHours(1);;
+    private Duration urlExpiry = Duration.ofHours(1);
 
     /**
      * 获取 MinIO 服务的访问端点。

@@ -1,4 +1,4 @@
-package com.work.work.Mapper;
+package com.work.work.mapper;
 
 import java.util.concurrent.TimeUnit;
 
