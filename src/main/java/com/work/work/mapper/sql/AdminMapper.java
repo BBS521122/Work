@@ -3,10 +3,7 @@ package com.work.work.mapper.sql;
 
 import com.work.work.dto.user.UserQueryDTO;
 import com.work.work.vo.UserVO;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Result;
-import org.apache.ibatis.annotations.Results;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
 
@@ -48,5 +45,12 @@ public interface AdminMapper {
             @Result(property = "nickname", column = "nickname")
     })
     List<UserVO> queryUsers(UserQueryDTO query);
+
+    @Update("update test_union.user set state=#{state} where id=#{id}")
+    int updateState(
+            @Param("id") long id,
+            @Param("state") String state
+    );
+
 
 }

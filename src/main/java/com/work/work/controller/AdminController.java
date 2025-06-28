@@ -5,6 +5,7 @@ import com.work.work.service.AdminService;
 import com.work.work.dto.user.UserQueryDTO;
 import com.work.work.utils.User;
 import com.work.work.vo.HttpResponseEntity;
+import com.work.work.vo.StateVO;
 import com.work.work.vo.UserVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +35,12 @@ public class AdminController {
     @PostMapping("/update-user")
     public HttpResponseEntity<Integer> updateUser(@RequestBody User user) {
         int result = adminService.updateUser(user);
+        return new HttpResponseEntity<>(200, result, "success");
+    }
+
+    @PostMapping("/update-state")
+    public HttpResponseEntity<Integer> updateState(@RequestBody StateVO stateVO) {
+        int result = adminService.updateState(stateVO);
         return new HttpResponseEntity<>(200, result, "success");
     }
 

@@ -26,12 +26,12 @@ public class UserLoginVO {
         this.id = id;
     }
 
-    public String getUsername() {
+    public String getName() {
         return name;
     }
 
-    public void setUsername(String username) {
-        this.name = username;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getToken() {

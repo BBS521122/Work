@@ -11,6 +11,7 @@ import com.work.work.converter.UserConverter;
 import com.work.work.dto.user.UserQueryDTO;
 import com.work.work.properties.JwtProperties;
 import com.work.work.utils.User;
+import com.work.work.vo.StateVO;
 import com.work.work.vo.UserVO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -94,5 +95,10 @@ public class AdminServiceImpl implements AdminService {
             }
         }
         return successCount;
+    }
+
+    @Override
+    public int updateState(StateVO stateVO) {
+        return adminMapper.updateState(stateVO.getId(), stateVO.getState());
     }
 }
