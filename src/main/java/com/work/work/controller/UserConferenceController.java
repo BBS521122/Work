@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController
-@RequestMapping("/conference")
+@RequestMapping("/user_conference")
 @CrossOrigin
 public class UserConferenceController {
     @Autowired

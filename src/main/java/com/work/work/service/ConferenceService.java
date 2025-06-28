@@ -24,4 +24,6 @@ public interface ConferenceService {
     List<Long> get(RequestDTO requestDTO, int pageNum, int pageSize);
 
     String delete(Long id);
+
+    int approve(Long id);
 }

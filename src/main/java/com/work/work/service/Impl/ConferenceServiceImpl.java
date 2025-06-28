@@ -199,4 +199,9 @@ public class ConferenceServiceImpl implements ConferenceService {
         }
         return conferenceMapper.deleteConference(id) + conferenceMediaMapper.deleteMediaByConferenceId(id) + "";
     }
+
+    @Override
+    public int approve(Long id) {
+        return conferenceMapper.approve(id);
+    }
 }

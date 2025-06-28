@@ -114,5 +114,10 @@ public class ConferenceController {
         return new HttpResponseEntity<>(200, res, "success");
     }
 
+    @PostMapping("/approve")
+    public HttpResponseEntity<String> approve(@RequestParam("id") Long id) {
+        String res = String.valueOf(conferenceService.approve(id));
+        return new HttpResponseEntity<>(200, res, "success");
+    }
 
 }

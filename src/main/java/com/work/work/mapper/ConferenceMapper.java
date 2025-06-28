@@ -49,4 +49,15 @@ public interface ConferenceMapper {
 
     @Delete("DELETE FROM test_union.conference WHERE id = #{id}")
     int deleteConference(Long id);
+
+    @Update("UPDATE test_union.conference SET state = 'APPROVED' WHERE id = #{id}")
+    int approve(Long id);
+
+    @Select("SELECT id, name, state, start_time AS startTime, end_time AS endTime " +
+            "FROM test_union.conference WHERE state = #{state}")
+    List<Conference> selectConferencesByState(String state);
+
+    @Update("UPDATE test_union.conference SET state = #{state} WHERE id = #{id}")
+    int updateState(@Param("id") Long id, @Param("state") String state);
+
 }
