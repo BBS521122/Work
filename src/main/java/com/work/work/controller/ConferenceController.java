@@ -36,9 +36,7 @@ public class ConferenceController {
     @PostMapping("/add")
     public HttpResponseEntity<Integer> add(@RequestPart("data") ConferenceAddDTO conferenceAddDTO, @RequestPart("cover") MultipartFile cover) {
         Conference conference = conferenceConverter.conferenceAddDTOToConference(conferenceAddDTO);
-        //FIXME Only For Test 实际使用Context获取Id
-//        conference.setUserId(UserContext.getUserId());
-        conference.setUserId(1L);
+        conference.setUserId(UserContext.getUserId());
         Integer res = conferenceService.add(conference, cover, conferenceAddDTO.getUuid());
         // 业务处理
         return new HttpResponseEntity<>(200, res, "success");

@@ -9,6 +9,7 @@ import com.work.work.entity.Conference;
 import com.work.work.entity.ConferenceMedia;
 import com.work.work.mapper.ConferenceMapper;
 import com.work.work.mapper.ConferenceMediaMapper;
+import com.work.work.mapper.sql.UserMapper;
 import com.work.work.service.ConferenceService;
 import com.work.work.service.MinioService;
 import com.work.work.vo.UserVO;
@@ -31,6 +32,8 @@ public class ConferenceServiceImpl implements ConferenceService {
 
     @Autowired
     private ConferenceConverter conferenceConverter;
+    @Autowired
+    private UserMapper userMapper;
 
     public ConferenceServiceImpl(MinioService minioService, ConferenceMediaMapper conferenceMediaMapper) {
         this.minioService = minioService;
@@ -95,8 +98,8 @@ public class ConferenceServiceImpl implements ConferenceService {
         ConferenceGetDTO conferenceGetDTO = conferenceConverter.conferenceToConferenceGetDTO(conference);
         // 设置替换后的内容
         conferenceGetDTO.setContent(resultContent.toString());
-        // FIXME 替换成UserMapper相关方法，根据user Id获取name
-        conferenceGetDTO.setUserName("admin");
+        String name = userMapper.selectNameById(conference.getUserId());
+        conferenceGetDTO.setUserName(name);
         return conferenceGetDTO; // 添加返回语句
 
     }
@@ -192,6 +195,7 @@ public class ConferenceServiceImpl implements ConferenceService {
     }
 
     @Override
+    @Transactional
     public String delete(Long id) {
         List<String> coverName = conferenceMediaMapper.selectMediaNamesByConferenceId(id);
         for (String name : coverName) {

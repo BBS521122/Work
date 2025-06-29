@@ -54,4 +54,7 @@ public interface UserMapper {
 
     @Update("UPDATE test_union.user SET avatar = #{avatarUrl} WHERE id = #{id}")
     int updateAvatarById(@Param("id") long id, @Param("avatarUrl") String avatarUrl);
+
+    @Select("SELECT name FROM test_union.user WHERE id = #{id}")
+    String selectNameById(@Param("id") long id);
 }
