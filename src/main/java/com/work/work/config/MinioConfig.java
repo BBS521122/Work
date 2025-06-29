@@ -19,8 +19,16 @@ public class MinioConfig {
     @Bean
     public MinioClient minioClient() {
         return MinioClient.builder()
-                .endpoint(minioProperties.getEndpoint())
+                .endpoint("http://" + getLocalIp() + ":9000")
                 .credentials(minioProperties.getAccessKey(), minioProperties.getSecretKey())
                 .build();
+    }
+    private String getLocalIp() {
+        try {
+            java.net.InetAddress inetAddress = java.net.InetAddress.getLocalHost();
+            return inetAddress.getHostAddress();
+        } catch (Exception e) {
+            throw new RuntimeException("无法获取本地IP", e);
+        }
     }
 }
