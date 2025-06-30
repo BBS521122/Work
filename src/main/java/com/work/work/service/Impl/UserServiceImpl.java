@@ -59,9 +59,10 @@ public class UserServiceImpl implements UserService {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(name, password);
         Authentication authentication = authenticationManager.authenticate(authenticationToken);
         if (authentication == null) {
+            System.out.println("Invalid name or password");
             throw new RuntimeException("Invalid name or password");
         }
-
+        System.out.println("Invalid name or password");
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         User user = userDetails.getUser();
         RoleEnum role = userDetails.getRoleEnum();
@@ -80,6 +81,7 @@ public class UserServiceImpl implements UserService {
         UserLoginVO userLoginVO = userConverter.userToUserLoginVO(user);
         userLoginVO.setToken(token);
         userLoginVO.setRole(userMapper.findRoleEnumByUserId(user.getId()));
+        userLoginVO.setState(userMapper.findStateByUserId(user.getId()));
         return userLoginVO;
     }
 

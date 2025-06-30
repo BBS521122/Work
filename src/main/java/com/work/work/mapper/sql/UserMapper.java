@@ -17,12 +17,15 @@ public interface UserMapper {
     User getUserByUsername(String name);
 
     @Insert("insert into test_union.user " +
-            "VALUES (#{id},#{name},#{gender},#{password},#{state},#{department},#{email},#{time},#{phone},#{role},#{post},#{photo},#{nickname})")
+            "VALUES (#{id},#{name},#{gender},#{password},#{state},#{department},#{email},#{time},#{phone},#{role},#{post},#{avatar},#{nickname})")
     int insert(User user);
 
     @Select("select role from test_union.user where id = #{id}")
     @ResultType(RoleEnum.class)
     RoleEnum findRoleEnumByUserId(@Param("id") long id);
+
+    @Select("select state from test_union.user where id = #{id}")
+    String findStateByUserId(@Param("id") long id);
 
     @Update("update test_union.user set password = #{encodedPassword} where id = #{id}")
     int updatePassword(long id, String encodedPassword);

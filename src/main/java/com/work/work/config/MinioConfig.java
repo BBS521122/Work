@@ -31,4 +31,6 @@ public class MinioConfig {
             throw new RuntimeException("无法获取本地IP", e);
         }
     }
+
+
 }

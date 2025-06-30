@@ -129,8 +129,8 @@ public class ConferenceServiceImpl implements ConferenceService {
         ConferenceGettingDTO conferenceGettingDTO = conferenceConverter.conferenceToConferenceGettingDTO(conference);
         // 设置替换后的内容
         conferenceGettingDTO.setContent(resultContent.toString());
-        // FIXME 替换成UserMapper相关方法，根据user Id获取name
-        conferenceGettingDTO.setUserName("admin");
+        String name = userMapper.selectNameById(conference.getUserId());
+        conferenceGettingDTO.setUserName(name);
         return conferenceGettingDTO; // 添加返回语句
 
     }

@@ -7,15 +7,17 @@ public class UserLoginVO {
     private String name;
     private String token;
     private RoleEnum role;
+    private String state;
 
     public UserLoginVO() {
     }
 
-    public UserLoginVO(Long id, String name, String token, RoleEnum role) {
+    public UserLoginVO(Long id, String name, String token, RoleEnum role, String state) {
         this.id = id;
         this.name = name;
         this.token = token;
         this.role = role;
+        this.state = state;
     }
 
     public Long getId() {
@@ -48,6 +50,14 @@ public class UserLoginVO {
 
     public void setRole(RoleEnum role) {
         this.role = role;
+    }
+
+    public String getState() {
+        return state;
+    }
+
+    public void setState(String state) {
+        this.state = state;
     }
 }
 
