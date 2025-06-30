@@ -22,5 +22,5 @@ public interface TenantService {
 
     Tenant getTenant(Long id);
 
-    String delete(Long id);
+    int delete(Long id);
 }

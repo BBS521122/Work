@@ -176,7 +176,7 @@ public class TenantServiceImpl implements TenantService {
 
     @Override
     @Transactional
-    public String delete(Long id) {
+    public int delete(Long id) {
         List<String> coverName = tenantMediaMapper.selectMediaNamesByTenantId(id);
         for (String name : coverName) {
             minioService.deleteFile(name);

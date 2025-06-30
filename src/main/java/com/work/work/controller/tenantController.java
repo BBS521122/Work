@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/tenant")
@@ -102,8 +103,8 @@ public class tenantController {
     }
 
     @GetMapping("/delete")
-    public HttpResponseEntity<String> delete(@RequestParam("id") Long id) {
-        String res = tenantService.delete(id);
+    public HttpResponseEntity<Integer> delete(@RequestParam("id") Long id) {
+        int res = tenantService.delete(id);
         return new HttpResponseEntity<>(200, res, "success");
     }
 
@@ -117,5 +118,20 @@ public class tenantController {
             System.out.println(tenantService.getTenant(id).getContactPerson());
         }
         return new HttpResponseEntity<>(200, res, "success");
+    }
+
+    @PostMapping("/batch-delete")
+    public HttpResponseEntity<String> batchDelete(@RequestBody Map<String, List<String>> request) {
+        List<String> ids = request.get("ids");
+        StringBuilder res = new StringBuilder();
+        for (String id : ids) {
+            try {
+                long number = Long.parseLong(id);
+                res.append(tenantService.delete(number));
+            } catch (NumberFormatException e) {
+                res.append("Invalid ID format: ").append(id).append("; ");
+            }
+        }
+        return new HttpResponseEntity<>(200, res.toString(), "success");
     }
 }

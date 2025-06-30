@@ -47,6 +47,6 @@ public interface TenantMapper {
     List<Long> get(SearchDTO searchDTO);
 
     @Delete("DELETE FROM test_union.tenant WHERE id = #{id}")
-    String deleteTenant(Long id);
+    int deleteTenant(Long id);
 
 }
