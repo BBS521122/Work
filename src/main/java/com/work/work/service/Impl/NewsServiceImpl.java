@@ -31,18 +31,29 @@ public class NewsServiceImpl implements NewsService {
     public void addNews(News news) {
         validateNews(news);
 
-        // 插入排序处理：将所有 >= 新插入排序值的记录往后挪
-        if (news.getSortOrder() != null) {
-            List<News> affected = newsMapper.selectBySortOrderGreaterThanEqual(news.getSortOrder());
+        if ("已通过".equals(news.getStatus())) {
+            // 只有通过的新闻才分配排序值
+            if (news.getSortOrder() == null) {
+                // 若前端没指定，默认插入到最后
+                Integer maxSort = newsMapper.selectMaxSortOrder();
+                news.setSortOrder(maxSort != null ? maxSort + 1 : 1);
+            }
+
+            // 调整其他记录
+            List<News> affected = newsMapper.selectPassedBySortOrderGreaterThanEqual(news.getSortOrder());
             for (News n : affected) {
                 int newOrder = n.getSortOrder() + 1;
                 n.setSortOrder(newOrder);
                 newsMapper.updateSortOrderById(n.getId(), newOrder);
             }
+        } else {
+            // 未通过的资讯不参与排序
+            news.setSortOrder(null);
         }
 
         newsMapper.insert(news);
     }
+
 
 
     @Override
@@ -53,20 +64,45 @@ public class NewsServiceImpl implements NewsService {
         News oldNews = newsMapper.selectById(news.getId());
         if (oldNews == null) throw new RuntimeException("记录不存在");
 
-        int oldSort = oldNews.getSortOrder();
-        int newSort = news.getSortOrder();
+        // 获取当前登录用户是否为管理员（假设 future 你使用了 Spring Security）
+        boolean isAdmin = true;
 
-        if (newSort != oldSort) {
-            if (newSort < oldSort) {
-                // 向前移动：将 [newSort, oldSort-1] 的新闻 +1
-                newsMapper.incrementSortOrderRange(newSort, oldSort - 1, news.getId());
-            } else {
-                // 向后移动：将 [oldSort+1, newSort] 的新闻 -1
-                newsMapper.decrementSortOrderRange(oldSort + 1, newSort, news.getId());
+
+        if (!isAdmin) {
+            // 普通用户修改“已通过”或“已拒绝”的新闻
+            if ("已通过".equals(oldNews.getStatus()) || "已拒绝".equals(oldNews.getStatus())) {
+                news.setStatus("待审核");
+                if (oldNews.getSortOrder() != null) {
+                    // 需要清理排序空位
+                    int deletedOrder = oldNews.getSortOrder();
+
+                    List<News> affected = newsMapper.selectPassedBySortOrderGreaterThan(deletedOrder);
+                    for (News n : affected) {
+                        int newOrder = n.getSortOrder() - 1;
+                        newsMapper.updateSortOrderById(n.getId(), newOrder);
+                    }
+
+                }
+            }
+        } else {
+            // 管理员才允许调整排序
+            int oldSort = oldNews.getSortOrder() == null ? -1 : oldNews.getSortOrder();
+            Integer newSort = news.getSortOrder();
+
+            if ("已通过".equals(news.getStatus()) && newSort != null && oldSort != -1) {
+                if (!newSort.equals(oldSort)) {
+                    if (newSort < oldSort) {
+                        // 向前移动：将 [newSort, oldSort-1] 的新闻 +1
+                        newsMapper.incrementSortOrderRange(newSort, oldSort - 1, news.getId());
+                    } else {
+                        // 向后移动：将 [oldSort+1, newSort] 的新闻 -1
+                        newsMapper.decrementSortOrderRange(oldSort + 1, newSort, news.getId());
+                    }
+                }
             }
         }
 
-        // ✅ 清理内容差异部分的图片（保留你已有逻辑）
+        // ✅ 清理内容差异部分的图片
         if (!Objects.equals(news.getImagePath(), oldNews.getImagePath())) {
             deleteFileByUrl(oldNews.getImagePath());
         }
@@ -78,8 +114,10 @@ public class NewsServiceImpl implements NewsService {
             }
         }
 
-        newsMapper.update(news); // ✅ 更新最终排序值
+        // 最终更新记录（含排序变更/状态变更）
+        newsMapper.update(news);
     }
+
 
 
 
@@ -92,22 +130,76 @@ public class NewsServiceImpl implements NewsService {
             throw new RuntimeException("记录不存在或已被删除");
         }
 
-        int deletedOrder = news.getSortOrder();
+        // 逻辑删除
         newsMapper.softDelete(id);
 
-        // 后移排序前移
-        List<News> affected = newsMapper.selectBySortOrderGreaterThan(deletedOrder);
-        for (News n : affected) {
-            n.setSortOrder(n.getSortOrder() - 1);
-            newsMapper.updateSortOrderById(n.getId(), n.getSortOrder());
+        // 仅“已通过”并且有排序值的新闻，才需要调整排序
+        if ("已通过".equals(news.getStatus()) && news.getSortOrder() != null) {
+            int deletedOrder = news.getSortOrder();
+
+            // 查询所有比它大的“已通过”新闻
+            List<News> affected = newsMapper.selectPassedBySortOrderGreaterThan(deletedOrder);
+
+            // 批量调整这些记录的排序值
+            for (News n : affected) {
+                int newOrder = n.getSortOrder() - 1;
+                newsMapper.updateSortOrderById(n.getId(), newOrder);
+            }
+        }
+    }
+    @Override
+    @Transactional
+    public void deleteNewsBatch(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return;
+
+        // 拿到所有要删除的记录
+        List<News> toDelete = ids.stream()
+                .map(newsMapper::selectById)
+                .filter(Objects::nonNull)
+                .toList();
+
+        // 拆分“已通过的”和“其他的”
+        List<News> passedToDelete = toDelete.stream()
+                .filter(n -> "已通过".equals(n.getStatus()) && n.getSortOrder() != null)
+                .sorted(Comparator.comparingInt(News::getSortOrder))
+                .toList();
+
+        Set<Long> idSet = toDelete.stream().map(News::getId).collect(Collectors.toSet());
+
+        // 1. 所有记录都逻辑删除
+        for (Long id : idSet) {
+            newsMapper.softDelete(id);
+        }
+
+        // 2. 仅“已通过”的需要处理排序
+        if (!passedToDelete.isEmpty()) {
+            Set<Integer> deletedOrders = passedToDelete.stream()
+                    .map(News::getSortOrder)
+                    .collect(Collectors.toSet());
+
+            int minDeletedOrder = passedToDelete.get(0).getSortOrder();
+
+            // 查询所有比最小排序值大的“已通过”新闻
+            List<News> affected = newsMapper.selectPassedBySortOrderGreaterThan(minDeletedOrder);
+
+            for (News n : affected) {
+                // 看看这个排序值前面有几个被删了，向前挪动
+                int moveUp = (int) deletedOrders.stream().filter(o -> o < n.getSortOrder()).count();
+                if (moveUp > 0) {
+                    int newOrder = n.getSortOrder() - moveUp;
+                    newsMapper.updateSortOrderById(n.getId(), newOrder);
+                }
+            }
         }
     }
 
 
+
     @Override
-    public List<News> getAllNews() {
-        return newsMapper.selectAll();
+    public List<News> getNewsByStatus(String status) {
+        return newsMapper.selectByStatus(status);
     }
+
 
     @Override
     public News getNewsById(Long id) {
@@ -115,57 +207,113 @@ public class NewsServiceImpl implements NewsService {
     }
 
     @Override
-    public List<News> getDeletedNews() {
+    public List<News> getAllDeletedNews() {
         return newsMapper.selectDeleted();
     }
 
     @Override
+    public List<News> getDeletedNewsByTenant(Long tenantId) {
+        return newsMapper.selectDeletedByTenant(tenantId);
+    }
+
+
+    @Override
+    @Transactional
     public void restoreNews(Long id) {
         News news = newsMapper.selectByIdIncludingDeleted(id);
         if (news == null) throw new RuntimeException("记录不存在");
 
-        List<News> existing = newsMapper.selectAll();
-        int targetOrder = news.getSortOrder() != null ? news.getSortOrder() : 0;
-        existing.sort((a, b) -> b.getSortOrder() - a.getSortOrder());
+        boolean isAdmin = true; // 临时代替权限系统
 
-        for (News n : existing) {
-            if (n.getSortOrder() >= targetOrder) {
-                n.setSortOrder(n.getSortOrder() + 1);
-                newsMapper.update(n);
+        newsMapper.restore(id); // 先还原 is_deleted = 0，后续 update 才能成功
+
+        if (isAdmin) {
+            String status = news.getStatus();
+
+            if ("已通过".equals(status) && news.getSortOrder() != null) {
+                Integer targetOrder = news.getSortOrder();
+                Integer maxSort = newsMapper.selectMaxSortOrder();
+                int currentMax = maxSort != null ? maxSort : -1;
+
+                if (targetOrder > currentMax) {
+                    targetOrder = ++currentMax;
+                    news.setSortOrder(targetOrder);
+                }
+
+                List<News> affected = newsMapper.selectPassedBySortOrderGreaterThanEqual(targetOrder);
+                for (News n : affected) {
+                    newsMapper.updateSortOrderById(n.getId(), n.getSortOrder() + 1);
+                }
+
+            } else {
+                news.setSortOrder(null);
             }
+
+            newsMapper.update(news);
+
+        } else {
+            news.setStatus("待审核");
+            news.setSortOrder(null);
+            newsMapper.update(news);
         }
-
-        newsMapper.restore(id);
-        news.setSortOrder(targetOrder);
-        newsMapper.update(news);
     }
-
     @Override
+    @Transactional
     public void restoreNewsBatch(List<Long> ids) {
         if (ids == null || ids.isEmpty()) return;
 
-        List<News> toRestore = new ArrayList<>();
-        for (Long id : ids) {
-            News n = newsMapper.selectByIdIncludingDeleted(id);
-            if (n != null) toRestore.add(n);
-        }
-        toRestore.sort(Comparator.comparingInt(n -> n.getSortOrder() != null ? n.getSortOrder() : 0));
+        boolean isAdmin = true;
 
-        List<News> existing = newsMapper.selectAll();
-        for (News restoreNews : toRestore) {
-            int targetOrder = restoreNews.getSortOrder() != null ? restoreNews.getSortOrder() : 0;
-            existing.sort((a, b) -> b.getSortOrder() - a.getSortOrder());
-            for (News n : existing) {
-                if (n.getSortOrder() >= targetOrder) {
-                    n.setSortOrder(n.getSortOrder() + 1);
-                    newsMapper.update(n);
+        List<News> toRestore = ids.stream()
+                .map(newsMapper::selectByIdIncludingDeleted)
+                .filter(Objects::nonNull)
+                .toList();
+
+        newsMapper.restoreBatch(ids); // ✅ 必须先还原 is_deleted=0
+
+        if (isAdmin) {
+            List<News> existing = newsMapper.selectAll().stream()
+                    .filter(n -> "已通过".equals(n.getStatus()) && n.getSortOrder() != null)
+                    .sorted(Comparator.comparingInt(News::getSortOrder).reversed())
+                    .collect(Collectors.toList());
+
+            Integer maxSort = newsMapper.selectMaxSortOrder();
+            int currentMax = maxSort != null ? maxSort : -1;
+
+            for (News news : toRestore) {
+                String status = news.getStatus();
+
+                if ("已通过".equals(status) && news.getSortOrder() != null) {
+                    Integer sort = news.getSortOrder();
+
+                    if (sort > currentMax) {
+                        sort = ++currentMax;
+                        news.setSortOrder(sort);
+                    }
+
+                    List<News> affected = newsMapper.selectPassedBySortOrderGreaterThanEqual(sort);
+                    for (News n : affected) {
+                        newsMapper.updateSortOrderById(n.getId(), n.getSortOrder() + 1);
+                    }
+
+                } else {
+                    news.setSortOrder(null);
                 }
+
+                newsMapper.update(news);
             }
-            newsMapper.restore(restoreNews.getId());
-            newsMapper.update(restoreNews);
-            existing.add(restoreNews);
+
+        } else {
+            for (News news : toRestore) {
+                news.setStatus("待审核");
+                news.setSortOrder(null);
+                newsMapper.update(news);
+            }
         }
     }
+
+
+
 
     @Override
     public void hardDeleteNews(Long id) {
@@ -204,39 +352,7 @@ public class NewsServiceImpl implements NewsService {
             throw new RuntimeException("部分新闻彻底删除失败");
         }
     }
-    @Override
-    @Transactional
-    public void deleteNewsBatch(List<Long> ids) {
-        if (ids == null || ids.isEmpty()) return;
 
-        // 取出所有要删除的记录，并按 sortOrder 升序排序
-        List<News> toDelete = ids.stream()
-                .map(newsMapper::selectById)
-                .filter(Objects::nonNull)
-                .sorted(Comparator.comparingInt(News::getSortOrder))
-                .toList();
-
-        Set<Long> idSet = toDelete.stream().map(News::getId).collect(Collectors.toSet());
-        Set<Integer> deletedOrders = toDelete.stream().map(News::getSortOrder).collect(Collectors.toSet());
-
-        // 逻辑删除这些记录
-        for (Long id : idSet) {
-            newsMapper.softDelete(id);
-        }
-
-        // 所有未删除记录中，排序值比最小删除值大的
-        int minDeletedOrder = toDelete.get(0).getSortOrder();
-        List<News> affected = newsMapper.selectBySortOrderGreaterThan(minDeletedOrder);
-
-        for (News n : affected) {
-            int moveUp = (int) deletedOrders.stream().filter(o -> o < n.getSortOrder()).count();
-            if (moveUp > 0) {
-                int newOrder = n.getSortOrder() - moveUp;
-                n.setSortOrder(newOrder);
-                newsMapper.updateSortOrderById(n.getId(), newOrder);
-            }
-        }
-    }
 
 
     private void validateNews(News news) {
@@ -275,4 +391,49 @@ public class NewsServiceImpl implements NewsService {
             }
         }
     }
+    @Override
+    @Transactional
+    public void approveNews(Long id) {
+        News news = newsMapper.selectById(id);
+        if (news == null || !"待审核".equals(news.getStatus())) {
+            throw new RuntimeException("记录不存在或状态错误");
+        }
+
+        // 确定目标排序值
+        Integer targetSort = news.getSortOrder();
+
+        if (targetSort == null) {
+            // 如果没有指定排序值，默认加在最后
+            Integer maxSort = newsMapper.selectMaxSortOrder();
+            targetSort = (maxSort != null ? maxSort + 1 : 1);
+        } else {
+            // 如果用户请求了特定排序值，需要调整已通过记录的排序空位
+            List<News> affected = newsMapper.selectPassedBySortOrderGreaterThanEqual(targetSort);
+            for (News n : affected) {
+                newsMapper.updateSortOrderById(n.getId(), n.getSortOrder() + 1);
+            }
+        }
+
+        news.setSortOrder(targetSort);
+        news.setStatus("已通过");
+
+        newsMapper.updateSortOrderById(news.getId(), targetSort);
+        newsMapper.updateStatus(news.getId(), "已通过");
+    }
+
+
+    @Override
+    public void rejectNews(Long id) {
+        News news = newsMapper.selectById(id);
+        if (news == null || news.getStatus() == null || !"待审核".equals(news.getStatus())) {
+            throw new RuntimeException("记录不存在或状态不正确");
+        }
+        news.setStatus("已拒绝");
+        newsMapper.updateStatus(id, "已拒绝");
+    }
+    @Override
+    public List<News> getNewsByTenantId(Long tenantId) {
+        return newsMapper.selectByTenantId(tenantId);
+    }
+
 }

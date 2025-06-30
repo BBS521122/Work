@@ -83,9 +83,21 @@ public class NewsController {
     }
 
     @GetMapping
-    public List<News> list() {
-        return newsService.getAllNews();
+    public List<News> list(
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Long tenantId
+    ) {
+        if (tenantId != null) {
+            return newsService.getNewsByTenantId(tenantId);
+        }
+        if (status != null && !status.isBlank()) {
+            return newsService.getNewsByStatus(status);
+        }
+        // 默认返回“已通过”新闻（主页用）
+        return newsService.getNewsByStatus("已通过");
     }
+
+
 
     @GetMapping("/{id}")
     public ResponseEntity<?> get(@PathVariable Long id) {
@@ -95,8 +107,15 @@ public class NewsController {
     }
 
     @PostMapping
-    public ResponseEntity<?> add(@RequestBody News news) {
+    public ResponseEntity<?> add(@RequestParam String role, @RequestBody News news) {
         try {
+            if ("ADMIN".equalsIgnoreCase(role)) {
+                news.setStatus("已通过");
+            } else {
+                news.setStatus("待审核");
+            }
+
+            // 注意：tenantId 已在前端设置，无需后端再手动设置
             newsService.addNews(news);
             return ResponseEntity.ok(Map.of("message", "创建成功"));
         } catch (IllegalArgumentException e) {
@@ -105,6 +124,7 @@ public class NewsController {
             return ResponseEntity.status(500).body(Map.of("message", "服务器内部错误"));
         }
     }
+
 
     @PutMapping("/{id}")
     public ResponseEntity<?> update(@PathVariable Long id, @RequestBody News news) {
@@ -130,9 +150,15 @@ public class NewsController {
     }
     // 获取回收站新闻列表
     @GetMapping("/recycle-bin")
-    public List<News> getRecycleBin() {
-        return newsService.getDeletedNews();
+    public List<News> getRecycleBin(@RequestParam(required = false) Long tenantId) {
+        // 如果没有传 tenantId，视为管理员访问
+        if (tenantId == null) {
+            return newsService.getAllDeletedNews(); // 管理员：返回全部
+        } else {
+            return newsService.getDeletedNewsByTenant(tenantId); // 普通用户：仅返回自己的
+        }
     }
+
     // 恢复回收站新闻
     @PutMapping("/restore/{id}")
     public ResponseEntity<?> restore(@PathVariable Long id) {
@@ -190,5 +216,24 @@ public class NewsController {
         }
     }
 
+    @PutMapping("/approve/{id}")
+    public ResponseEntity<?> approve(@PathVariable Long id) {
+        try {
+            newsService.approveNews(id);
+            return ResponseEntity.ok(Map.of("message", "审核通过"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("message", "审核通过失败：" + e.getMessage()));
+        }
+    }
+
+    @PutMapping("/reject/{id}")
+    public ResponseEntity<?> reject(@PathVariable Long id) {
+        try {
+            newsService.rejectNews(id);
+            return ResponseEntity.ok(Map.of("message", "审核拒绝"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("message", "审核拒绝失败：" + e.getMessage()));
+        }
+    }
 
 }

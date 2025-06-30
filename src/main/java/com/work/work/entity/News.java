@@ -35,5 +35,11 @@ public class News {
     @Column(name = "is_deleted")
     private Integer isDeleted = 0;
     @Column(name = "sort_order")
-    private Integer sortOrder=0;
+    private Integer sortOrder;
+
+    @Column(name = "status")
+    private String status = "待审核";
+
+    @Column(name = "tenant_id")
+    private Long tenantId;
 }
