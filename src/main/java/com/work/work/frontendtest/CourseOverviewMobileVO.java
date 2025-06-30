@@ -4,16 +4,16 @@ public class CourseOverviewMobileVO {
     private Long id;
     private String coverUrl;
     private String title;
-    private String author;
+    private String creator;
 
     public CourseOverviewMobileVO() {
     }
 
-    public CourseOverviewMobileVO(Long id, String coverUrl, String title, String author) {
+    public CourseOverviewMobileVO(Long id, String coverUrl, String title, String creator) {
         this.id = id;
         this.coverUrl = coverUrl;
         this.title = title;
-        this.author = author;
+        this.creator = creator;
     }
 
     public Long getId() {
@@ -40,11 +40,11 @@ public class CourseOverviewMobileVO {
         this.title = title;
     }
 
-    public String getAuthor() {
-        return author;
+    public String getCreator() {
+        return creator;
     }
 
-    public void setAuthor(String author) {
-        this.author = author;
+    public void setCreator(String creator) {
+        this.creator = creator;
     }
 }
