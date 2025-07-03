@@ -4,6 +4,7 @@ import com.github.pagehelper.PageHelper;
 import com.work.work.converter.ConferenceConverter;
 import com.work.work.dto.ConferenceGetDTO;
 import com.work.work.dto.ConferenceGettingDTO;
+import com.work.work.dto.ConferenceWxDTO;
 import com.work.work.dto.RequestDTO;
 import com.work.work.entity.Conference;
 import com.work.work.entity.ConferenceMedia;
@@ -207,5 +208,39 @@ public class ConferenceServiceImpl implements ConferenceService {
     @Override
     public int approve(Long id) {
         return conferenceMapper.approve(id);
+    }
+
+    @Override
+    public List<Long> wxGet() {
+        return conferenceMapper.wxGet();
+    }
+
+    @Override
+    public ConferenceWxDTO getWxConference(Long id) {
+        Conference conference = conferenceMapper.selectConferenceById(id);
+        String content = conference.getContent();
+        // 匹配内容中的图片、视频URL
+        String mediaTagRegex = "<(img|video|source)[^>]*src=['\"]([^'\"]+)['\"][^>]*>";
+        Pattern pattern = Pattern.compile(mediaTagRegex);
+        Matcher matcher = pattern.matcher(content);
+
+        StringBuffer resultContent = new StringBuffer();
+        while (matcher.find()) {
+            String fullTag = matcher.group(0);
+            String fileName = matcher.group(2);
+            // 生成 Minio 文件的访问 URL
+            String fileUrl = minioService.getSignedUrl(fileName); // 使用正确的方法名
+            // 替换原始标签中的文件名为 URL
+            String newTag = fullTag.replace(fileName, fileUrl);
+            matcher.appendReplacement(resultContent, Matcher.quoteReplacement(newTag));
+        }
+        matcher.appendTail(resultContent);
+
+        ConferenceWxDTO conferenceWxDTO = conferenceConverter.conferenceToConferenceWxDTO(conference);
+        conferenceWxDTO.setContent(resultContent.toString());
+//        String name = userMapper.selectNameById(conference.getUserId());
+        conferenceWxDTO.setUserName("admin");
+        conferenceWxDTO.setCover(minioService.getSignedUrl(conference.getCover()));
+        return conferenceWxDTO;
     }
 }

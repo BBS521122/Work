@@ -11,24 +11,24 @@ import java.util.List;
 @Mapper
 public interface TenantMapper {
 
-    @Insert("INSERT INTO test_union.tenant (name,  cover, contact_person, phone, admin, note) " +
+    @Insert("INSERT INTO tenant (name,  cover, contact_person, phone, admin, note) " +
             "VALUES (#{name}, #{cover}, #{contactPerson}, #{phone}, #{admin}, #{note})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insertTenant(Tenant tenant);
 
-    @Update("UPDATE test_union.tenant SET name = #{name}, note = #{note}," +
+    @Update("UPDATE tenant SET name = #{name}, note = #{note}," +
             "cover=#{cover} WHERE id = #{id}")
     int updateTenant(Tenant tenant);
 
-    @Select("SELECT * FROM test_union.tenant WHERE id = #{id}")
+    @Select("SELECT * FROM tenant WHERE id = #{id}")
     Tenant selectTenantById(Long id);
 
-    @Select("SELECT cover FROM test_union.tenant WHERE id = #{id}")
+    @Select("SELECT cover FROM tenant WHERE id = #{id}")
     String selectCoverById(Long id);
 
     @Select("<script>" +
             "SELECT id\n" +
-            "    FROM test_union.tenant\n" +
+            "    FROM tenant\n" +
             "    <where>\n" +
             "      <if test=\"id != null and id != ''\">\n" +
             "        AND id LIKE CONCAT(#{id}, '%')\n" +
@@ -46,7 +46,7 @@ public interface TenantMapper {
             "</script>")
     List<Long> get(SearchDTO searchDTO);
 
-    @Delete("DELETE FROM test_union.tenant WHERE id = #{id}")
+    @Delete("DELETE FROM tenant WHERE id = #{id}")
     int deleteTenant(Long id);
 
 }

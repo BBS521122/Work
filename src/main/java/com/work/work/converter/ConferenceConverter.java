@@ -1,9 +1,6 @@
 package com.work.work.converter;
 
-import com.work.work.dto.ConferenceAddDTO;
-import com.work.work.dto.ConferenceGetDTO;
-import com.work.work.dto.ConferenceGettingDTO;
-import com.work.work.dto.ConferenceUpdateDTO;
+import com.work.work.dto.*;
 import com.work.work.entity.Conference;
 import com.work.work.entity.ConferenceMedia;
 import org.mapstruct.Mapper;
@@ -30,5 +27,8 @@ public interface ConferenceConverter {
     @Mapping(target = "state", ignore = true)
     @Mapping(target = "cover", ignore = true)
     Conference conferenceUpdateDTOToConference(ConferenceUpdateDTO conferenceUpdateDTO);
+
+    @Mapping(target = "userName", ignore = true)
+    ConferenceWxDTO conferenceToConferenceWxDTO(Conference conference);
 
 }

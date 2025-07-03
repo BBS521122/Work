@@ -9,6 +9,7 @@ import com.work.work.service.ConferenceService;
 import com.work.work.vo.HttpResponseEntity;
 import org.apache.ibatis.annotations.Delete;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/conference")
 @CrossOrigin
+@Configuration
 public class ConferenceController {
     @Autowired
     ConferenceService conferenceService;
@@ -102,6 +104,16 @@ public class ConferenceController {
         List<ConferenceGettingDTO> res = new ArrayList<>();
         for (Long id : list) {
             res.add(conferenceService.getConference(id));
+        }
+        return new HttpResponseEntity<>(200, res, "success");
+    }
+
+    @GetMapping("/wxGet")
+    public HttpResponseEntity<List<ConferenceWxDTO>> wxGet() {
+        List<Long> list = conferenceService.wxGet();
+        List<ConferenceWxDTO> res = new ArrayList<>();
+        for (Long id : list) {
+            res.add(conferenceService.getWxConference(id));
         }
         return new HttpResponseEntity<>(200, res, "success");
     }

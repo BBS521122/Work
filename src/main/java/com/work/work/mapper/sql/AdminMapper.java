@@ -12,7 +12,7 @@ public interface AdminMapper {
 
     @Select("<script>" +
             "SELECT id, name, gender, state, department, email, time, phone, role, post, nickname\n" +
-            "    FROM test_union.user\n" +
+            "    FROM userData\n" +
             "    <where>\n" +
             "      <if test=\"name != null and name != ''\">\n" +
             "        AND name LIKE CONCAT('%', #{name}, '%')\n" +
@@ -46,7 +46,7 @@ public interface AdminMapper {
     })
     List<UserVO> queryUsers(UserQueryDTO query);
 
-    @Update("update test_union.user set state=#{state} where id=#{id}")
+    @Update("update userData set state=#{state} where id=#{id}")
     int updateState(
             @Param("id") long id,
             @Param("state") String state

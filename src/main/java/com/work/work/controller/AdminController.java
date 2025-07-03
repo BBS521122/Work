@@ -8,6 +8,7 @@ import com.work.work.vo.HttpResponseEntity;
 import com.work.work.vo.StateVO;
 import com.work.work.vo.UserVO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/admin")
+@Configuration
 public class AdminController {
 
     // 添加日志记录器实例

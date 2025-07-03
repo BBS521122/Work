@@ -1,9 +1,12 @@
 package com.work.work.config;
 
+import com.work.work.fliter.CorsPreflightFilter;
 import com.work.work.fliter.JwtFliter;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,6 +28,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
  * SecurityConfig 类配置了 Spring Security 的安全设置。
  * 它定义了密码编码器、过滤器链和认证管理器的 Bean
  * 处于Springboot启动的入口位置，由springboot自动配置
+ *
  * @author 32358
  */
 @Configuration
@@ -42,7 +46,10 @@ public class SecurityConfig {
     }
 
     @Autowired
-    private JwtFliter jwtFilter;
+    private JwtFliter jwtFliter;
+
+    @Autowired
+    private CorsPreflightFilter corsPreflightFilter;
 
     /**
      * 配置安全过滤器链JwtFilter
@@ -64,16 +71,31 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.cors(withDefaults()).
-                csrf(csrf -> csrf.disable()).
-                formLogin(formLogin -> formLogin.disable()).
-                sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)).
-                authorizeHttpRequests(authorizeHttpRequests ->
+        return http
+                .cors(withDefaults())
+                .csrf(csrf -> csrf.disable())
+                .formLogin(formLogin -> formLogin.disable())
+                .httpBasic(httpBasic -> httpBasic.disable()) // 重要：这避免了默认的认证重定向
+                .sessionManagement(sessionManagement ->
+                        sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(authorizeHttpRequests ->
                         authorizeHttpRequests
-                                .requestMatchers("/user/login", "/user/register").permitAll()
-                                .requestMatchers("/admin/**").hasRole("ADMIN")// 允许匿名访问登录接口
-                                .anyRequest().authenticated() // 其他请求需要认证
-                ).addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 预检请求放行
+                                .requestMatchers("/user/login", "/user/register", "/conference/wxGet","/hello","/api/news/wxGet").permitAll()
+                                .requestMatchers("/admin/**").hasRole("ADMIN")
+                                .anyRequest().authenticated()
+                )
+                // 关键：自定义认证入口点，返回 JSON 而不是重定向
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            response.setContentType("application/json;charset=UTF-8");
+                            response.setHeader("Access-Control-Allow-Origin", request.getHeader("Origin"));
+                            response.setHeader("Access-Control-Allow-Credentials", "true");
+                            response.getWriter().write("{\"error\":\"Unauthorized\",\"message\":\"Authentication required\"}");
+                        })
+                )
+                .addFilterBefore(jwtFliter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 
@@ -99,16 +121,31 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // 支持通配符，允许所有来源
-        config.setAllowedOriginPatterns(List.of("*"));
-        // 允许的 HTTP 方法
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // 允许的请求头
+
+        // 明确指定允许的源，而不是使用通配符
+        config.setAllowedOriginPatterns(List.of(
+                "https://localhost:*",
+                "https://127.0.0.1:*",
+                "http://localhost:*",  // 如果前端也可能是 HTTP
+                "http://127.0.0.1:*"
+        ));
+
+        // 允许的方法
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"));
+
+        // 允许的头部
         config.setAllowedHeaders(List.of("*"));
-        // 如果前端需要携带 cookie，允许携带凭据
+
+        // 允许携带凭据
         config.setAllowCredentials(true);
+
+        // 预检请求缓存时间
+        config.setMaxAge(3600L);
+
+        // 暴露的响应头
+        config.setExposedHeaders(List.of("Authorization", "Content-Type"));
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // 将配置应用于所有路径
         source.registerCorsConfiguration("/**", config);
         return source;
     }

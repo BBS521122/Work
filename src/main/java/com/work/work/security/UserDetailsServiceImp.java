@@ -51,7 +51,7 @@ public class UserDetailsServiceImp implements UserDetailsService {
         RoleEnum role;
         try {
             // 调用 UserMapper 获取用户信息
-            user = userMapper.getUserByUsername(username);
+            user = userMapper.getUserByUsername1(1);
             role = userMapper.findRoleEnumByUserId(user.getId());
         } catch (Exception e) {
             // 如果查询失败，抛出 UsernameNotFoundException 异常

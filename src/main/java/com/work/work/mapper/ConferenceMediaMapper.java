@@ -14,16 +14,16 @@ public interface ConferenceMediaMapper {
      * @param conferenceMedia
      * @return
      */
-    @Insert("INSERT INTO test_union.conference_media (uuid, conference_id, name) VALUES (#{uuid}, #{conferenceId}, #{name})")
+    @Insert("INSERT INTO conference_media (uuid, conference_id, name) VALUES (#{uuid}, #{conferenceId}, #{name})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     int insert(ConferenceMedia conferenceMedia);
 
-    @Update("UPDATE test_union.conference_media SET conference_id = #{id} WHERE uuid = #{uuid}")
+    @Update("UPDATE conference_media SET conference_id = #{id} WHERE uuid = #{uuid}")
     int bindMedia(String uuid, Long id);
 
-    @Select("SELECT name FROM test_union.conference_media WHERE conference_id = #{id}")
+    @Select("SELECT name FROM conference_media WHERE conference_id = #{id}")
     List<String> selectMediaNamesByConferenceId(Long id);
 
-    @Delete("DELETE FROM test_union.conference_media WHERE conference_id = #{id}")
+    @Delete("DELETE FROM conference_media WHERE conference_id = #{id}")
     int deleteMediaByConferenceId(Long id);
 }

@@ -1,6 +1,7 @@
 package com.work.work.controller;
 
 
+import com.work.work.dto.UpdateDTO;
 import com.work.work.mapper.sql.UserMapper;
 import com.work.work.service.UserService;
 import com.work.work.context.UserContext;
@@ -12,6 +13,7 @@ import com.work.work.vo.HttpResponseEntity;
 import com.work.work.vo.SettingVO;
 import com.work.work.vo.UserLoginVO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +23,7 @@ import java.sql.Date;
 @RestController()
 @CrossOrigin
 @RequestMapping("/user")
+@Configuration
 public class UserController {
     @Autowired
     UserMapper userMapper;
@@ -35,9 +38,16 @@ public class UserController {
     @PostMapping("/login")
     public HttpResponseEntity<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO) {
         System.out.println(userLoginDTO.getName());
-        UserLoginVO userLoginVO = userService.login(userLoginDTO);
-        System.out.println(userLoginVO.getName());
-        return new HttpResponseEntity<UserLoginVO>(200, userLoginVO, "success");
+        UserLoginVO userLoginVO = new UserLoginVO();
+        try {
+            userLoginVO = userService.login(userLoginDTO);
+            System.out.println(userLoginVO.getName());
+            return new HttpResponseEntity<UserLoginVO>(200, userLoginVO, "success");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return new HttpResponseEntity<UserLoginVO>(400, null, "error");
+        }
+
     }
 
     @PostMapping("/register")
@@ -90,5 +100,19 @@ public class UserController {
         long id = UserContext.getUserId();
         String url = userService.updateUserAvatar(id, file);
         return new HttpResponseEntity<>(200, url, null);
+    }
+
+    @GetMapping("/confirm")
+    public HttpResponseEntity<String> confirmPassword() {
+        long id = UserContext.getUserId();
+        String res = userMapper.selectRoleById(id);
+        return new HttpResponseEntity<>(200, res, null);
+    }
+
+    @PostMapping("/update")
+    public HttpResponseEntity<Integer> update(@RequestBody UpdateDTO updateDTO) {
+        long id = UserContext.getUserId();
+        int res = userService.update(id, updateDTO);
+        return new HttpResponseEntity<>(200, res, "success");
     }
 }

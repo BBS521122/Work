@@ -1,5 +1,6 @@
 package com.work.work.service;
 
+import com.work.work.dto.UpdateDTO;
 import com.work.work.dto.user.UserLoginDTO;
 import com.work.work.utils.User;
 import com.work.work.vo.SettingVO;
@@ -21,5 +22,7 @@ public interface UserService {
     String getUserAvatarUrl(long id);
 
     String updateUserAvatar(long id, MultipartFile file);
+
+    int update(long id, UpdateDTO updateDTO);
 
 }

@@ -9,6 +9,7 @@ import com.work.work.service.ConferenceService;
 import com.work.work.service.TenantService;
 import com.work.work.vo.HttpResponseEntity;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -19,7 +20,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/tenant")
 @CrossOrigin
-public class tenantController {
+@Configuration
+public class TenantController {
 
     @Autowired
     TenantService tenantService;

@@ -65,6 +65,12 @@ public class JwtFliter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        if ("OPTIONS".equals(request.getMethod())) {
+            response.setStatus(HttpServletResponse.SC_OK);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         // 获取当前请求路径
         String path = request.getRequestURI();
 

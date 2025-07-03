@@ -4,6 +4,7 @@ package com.work.work.controller;
 import com.work.work.entity.Department;
 import com.work.work.mapper.sql.DepartmentMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.util.List;
 
 @RestController
 @CrossOrigin
+@Configuration
 public class DepartmentController {
     @Autowired
     private DepartmentMapper departmentMapper;
@@ -40,7 +42,49 @@ public class DepartmentController {
     public int updateDepartment(@RequestBody Department department) {
         department.setUpdateTime(LocalDateTime.now());
         department.setUpdateBy("admin");
-        return departmentMapper.updateDepartment(department);
+        int result = departmentMapper.updateDepartment(department);
+
+        // 如果本次是停用操作，则递归停用所有子部门
+        if (department.getStatus() != null && department.getStatus() == 1) {
+            disableChildDepartments(department.getId());
+        }
+        // 如果本次是启用操作，则递归启用所有子部门
+        if (department.getStatus() != null && department.getStatus() == 0) {
+            enableChildDepartments(department.getId());
+        }
+        return result;
+    }
+
+    /**
+     * 递归停用所有子部门
+     */
+    private void disableChildDepartments(Long parentId) {
+        List<Department> children = departmentMapper.getDepartmentsByParentId(parentId);
+        for (Department child : children) {
+            if (child.getStatus() != null && child.getStatus() == 0) {
+                child.setStatus(1);
+                child.setUpdateTime(LocalDateTime.now());
+                child.setUpdateBy("admin");
+                departmentMapper.updateDepartment(child);
+                disableChildDepartments(child.getId());
+            }
+        }
+    }
+
+    /**
+     * 递归启用所有子部门
+     */
+    private void enableChildDepartments(Long parentId) {
+        List<Department> children = departmentMapper.getDepartmentsByParentId(parentId);
+        for (Department child : children) {
+            if (child.getStatus() != null && child.getStatus() == 1) {
+                child.setStatus(0);
+                child.setUpdateTime(LocalDateTime.now());
+                child.setUpdateBy("admin");
+                departmentMapper.updateDepartment(child);
+                enableChildDepartments(child.getId());
+            }
+        }
     }
 
     // 删除部门
@@ -55,7 +99,6 @@ public class DepartmentController {
     public List<Department> searchDepartments(
             @RequestParam(required = false) String deptName,
             @RequestParam(required = false) Integer status) {
-        //System.out.println("deptName=" + deptName + ", status=" + status);
         return departmentMapper.searchDepartments(deptName, status);
     }
 }

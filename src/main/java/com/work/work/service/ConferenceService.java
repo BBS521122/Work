@@ -2,6 +2,7 @@ package com.work.work.service;
 
 import com.work.work.dto.ConferenceGetDTO;
 import com.work.work.dto.ConferenceGettingDTO;
+import com.work.work.dto.ConferenceWxDTO;
 import com.work.work.dto.RequestDTO;
 import com.work.work.entity.Conference;
 import org.springframework.web.multipart.MultipartFile;
@@ -26,4 +27,8 @@ public interface ConferenceService {
     String delete(Long id);
 
     int approve(Long id);
+
+    List<Long> wxGet();
+
+    ConferenceWxDTO getWxConference(Long Id);
 }

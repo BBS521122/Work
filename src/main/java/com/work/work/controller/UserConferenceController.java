@@ -9,6 +9,7 @@ import com.work.work.service.ConferenceService;
 import com.work.work.vo.HttpResponseEntity;
 import org.apache.ibatis.annotations.Delete;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/user_conference")
 @CrossOrigin
+@Configuration
 public class UserConferenceController {
     @Autowired
     ConferenceService conferenceService;

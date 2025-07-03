@@ -1,5 +1,6 @@
 package com.work.work.service.Impl;
 
+import com.work.work.dto.UpdateDTO;
 import com.work.work.mapper.RedisTokenMapper;
 import com.work.work.mapper.sql.UserMapper;
 import com.work.work.service.MinioService;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -57,7 +59,12 @@ public class UserServiceImpl implements UserService {
         String password = userLoginDTO.getPassword();
 
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(name, password);
-        Authentication authentication = authenticationManager.authenticate(authenticationToken);
+        Authentication authentication = null;
+        try {
+            authentication = authenticationManager.authenticate(authenticationToken);
+        } catch (AuthenticationException e) {
+            throw new RuntimeException(e);
+        }
         if (authentication == null) {
             System.out.println("Invalid name or password");
             throw new RuntimeException("Invalid name or password");
@@ -155,6 +162,12 @@ public class UserServiceImpl implements UserService {
             }
             throw new RuntimeException("更新头像失败: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public int update(long id, UpdateDTO updateDTO) {
+        System.out.println("updateDTO = " + updateDTO.getNickname());
+        return userMapper.update(id, updateDTO);
     }
 
 }
