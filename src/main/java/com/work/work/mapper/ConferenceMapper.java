@@ -8,6 +8,8 @@ import com.work.work.enums.ConferenceStateEnum;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
+
+@Mapper
 public interface ConferenceMapper {
 
     @Insert("INSERT INTO conference (name, state, cover, start_time, end_time, content, user_id) " +
@@ -62,6 +64,9 @@ public interface ConferenceMapper {
 
     @Select("select id from conference")
     List<Long> wxGet();
+
+    @Select("SELECT name FROM conference WHERE id = #{id}")
+    String getConferenceById(Long id);
 
 //    @Insert("INSERT INTO test_union.conference (name, state, cover, start_time, end_time, content, user_id) " +
 //            "VALUES (#{name}, #{state}, #{cover}, #{startTime}, #{endTime}, #{content}, #{userId})")

@@ -81,7 +81,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeHttpRequests ->
                         authorizeHttpRequests
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 预检请求放行
-                                .requestMatchers("/user/login", "/user/register", "/conference/wxGet","/hello","/api/news/wxGet").permitAll()
+                                .requestMatchers("/user/login", "/user/register", "/conference/wxGet","/hello","/api/news/wxGet","conference/get","receipt/submit").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .anyRequest().authenticated()
                 )
