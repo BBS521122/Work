@@ -56,7 +56,7 @@ public interface ConferenceMapper {
     int approve(Long id);
 
     @Select("SELECT id, name, state, start_time AS startTime, end_time AS endTime " +
-            "FROM conference WHERE state = #{state}::conference_state_enum")
+            "FROM conference WHERE state = #{state}")
     List<Conference> selectConferencesByState(ConferenceStateEnum state);
 
     @Update("UPDATE conference SET state = #{state} WHERE id = #{id}")
