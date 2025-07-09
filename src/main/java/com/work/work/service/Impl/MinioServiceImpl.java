@@ -95,7 +95,7 @@ public class MinioServiceImpl implements MinioService {
         }
     }
 
-    private boolean objectExists(String objectName) {
+    boolean objectExists(String objectName) {
         try {
             minioClient.statObject(StatObjectArgs.builder()
                     .bucket(minioProperties.getBucket())

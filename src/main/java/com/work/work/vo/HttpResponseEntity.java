@@ -53,4 +53,3 @@ public class HttpResponseEntity<T> implements Serializable {
         this.message = message;
     }
 }
-
