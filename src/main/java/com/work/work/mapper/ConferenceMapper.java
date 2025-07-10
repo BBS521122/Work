@@ -23,4 +23,5 @@ public interface ConferenceMapper {
     @Update("UPDATE conference SET name = #{name}, start_time = #{startTime}, end_time = #{endTime}, content = #{content}," +
             "cover=#{cover} WHERE id = #{id}")
     int updateConference(Conference conference);
+
 }

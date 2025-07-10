@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import com.work.work.properties.MinioProperties;
+
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.UUID;
 
@@ -44,6 +47,29 @@ public class MinioServiceImpl implements MinioService {
         }
     }
 
+
+    @Override
+    public String uploadTextFile(File file,String fileName) throws RuntimeException {
+        try {
+            String originalFilename = file.getName();
+            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            String objectName = UUID.randomUUID() + fileExtension;
+
+            try (InputStream inputStream = new java.io.FileInputStream(file)) {
+                minioClient.putObject(PutObjectArgs.builder()
+                        .bucket(minioProperties.getBucket())
+                        .object(fileName)
+                        .stream(inputStream, file.length(), minioProperties.getPartSize())
+                        .contentType("text/plain") // 如需识别类型可用 Files.probeContentType(file.toPath())
+                        .build());
+            }
+
+            return objectName;
+        } catch (Exception e) {
+            throw new RuntimeException("文件上传失败: " + e.getMessage(), e);
+        }
+    }
+
     @Override
     public String getSignedUrl(String objectName) {
         // 检查文件是否存在
@@ -62,7 +88,6 @@ public class MinioServiceImpl implements MinioService {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-
     }
 
     @Override
@@ -92,6 +117,41 @@ public class MinioServiceImpl implements MinioService {
             }
         } catch (Exception e) {
             throw new RuntimeException("错误: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 获取File
+     *
+     * @param objectName
+     * @return
+     */
+    @Override
+    public File getFile(String objectName) {
+        // 检查文件是否存在
+        if (!objectExists(objectName)) {
+            throw new RuntimeException("文件不存在");
+        }
+        try {
+            // 创建临时文件
+            File tempFile = File.createTempFile("minio_", "_" + objectName);
+            tempFile.deleteOnExit();
+            // 下载对象到临时文件
+            try (InputStream is = minioClient.getObject(
+                    GetObjectArgs.builder()
+                            .bucket(minioProperties.getBucket())
+                            .object(objectName)
+                            .build());
+                 FileOutputStream fos = new FileOutputStream(tempFile)) {
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                while ((bytesRead = is.read(buffer)) != -1) {
+                    fos.write(buffer, 0, bytesRead);
+                }
+            }
+            return tempFile;
+        } catch (Exception e) {
+            throw new RuntimeException("获取文件失败: " + e.getMessage(), e);
         }
     }
 }
