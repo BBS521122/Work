@@ -232,7 +232,7 @@ public class ConferenceServiceImpl implements ConferenceService {
         }
         minioService.uploadTextFile(tempFile, fileName);
         // FIXME
-        conferenceRecordMapper.updateTextById(2L, fileName);
+        conferenceRecordMapper.updateTextById(id, fileName);
     }
 
     @Override
