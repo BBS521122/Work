@@ -1,25 +1,43 @@
 package com.work.work.service.Impl;
 
 import com.github.pagehelper.PageHelper;
+import com.work.work.constants.ConferenceRecordConstants;
+import com.work.work.constants.ConferenceTimelineConstants;
 import com.work.work.converter.ConferenceConverter;
 import com.work.work.dto.ConferenceGetDTO;
 import com.work.work.dto.ConferenceGettingDTO;
 import com.work.work.dto.ConferenceWxDTO;
 import com.work.work.dto.RequestDTO;
+import com.work.work.dto.ConferenceTimelineDTO;
+import com.work.work.dto.MultipartFileWrapper;
 import com.work.work.entity.Conference;
 import com.work.work.entity.ConferenceMedia;
+import com.work.work.entity.ConferenceRecord;
 import com.work.work.mapper.ConferenceMapper;
 import com.work.work.mapper.ConferenceMediaMapper;
 import com.work.work.mapper.sql.UserMapper;
+import com.work.work.mapper.ConferenceRecordMapper;
+import com.work.work.service.AliCloudService;
 import com.work.work.service.ConferenceService;
+import com.work.work.service.DifyService;
 import com.work.work.service.MinioService;
 import com.work.work.vo.UserVO;
+import com.work.work.utils.DifyUtils;
+import com.work.work.vo.ConferenceTimelineVO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,12 +47,16 @@ public class ConferenceServiceImpl implements ConferenceService {
     private final ConferenceMediaMapper conferenceMediaMapper;
     @Autowired
     private ConferenceMapper conferenceMapper;
-
-
+    @Autowired
+    ConferenceRecordMapper conferenceRecordMapper;
     @Autowired
     private ConferenceConverter conferenceConverter;
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    AliCloudService aliCloudService;
+    @Autowired
+    DifyService difyService;
 
     public ConferenceServiceImpl(MinioService minioService, ConferenceMediaMapper conferenceMediaMapper) {
         this.minioService = minioService;
@@ -243,4 +265,128 @@ public class ConferenceServiceImpl implements ConferenceService {
         conferenceWxDTO.setCover(minioService.getSignedUrl(conference.getCover()));
         return conferenceWxDTO;
     }
+
+    @Override
+    public String uploadRecord(Long id, MultipartFile file) {
+        // 获取文件的 Content-Type
+        String contentType = file.getContentType();
+        if (contentType != null && contentType.contains(";")) {
+            // 去掉 `;` 之后的内容
+            contentType = contentType.split(";")[0];
+        }
+
+        // 创建一个新的 MultipartFile 包装对象，修改 Content-Type
+        MultipartFile processedFile = new MultipartFileWrapper(file, contentType);
+
+        // 上传文件到 MinIO
+        String name = minioService.uploadFile(processedFile);
+
+        // 插入记录到数据库
+        conferenceRecordMapper.insertConferenceRecord(new ConferenceRecord(null, id, name, null));
+        return name;
+    }
+
+    @Override
+    public String getConferenceRecordTextById(Long id) {
+        String name = conferenceRecordMapper.getTextById(id);
+        if (name == null) {
+            return null;
+        }
+        return minioService.getSignedUrl(name);
+
+    }
+
+    @Override
+    @Async
+    public void videoTrans(Long id) {
+        Integer upload = conferenceRecordMapper.getUploadById(id);
+        String video = conferenceRecordMapper.getVideoById(id);
+        if (video == null) {
+            return;
+        }
+        if (upload.equals(ConferenceRecordConstants.NOT_DOING)) {
+            aliCloudService.uploadFile(video);
+            conferenceRecordMapper.updateUpdateStatus(id, ConferenceRecordConstants.COMPLETED);
+        }
+        String taskId = conferenceRecordMapper.getTaskIdById(id);
+        if (taskId == null || taskId.isEmpty()) {
+            String url = aliCloudService.getUrl(video);
+            String task = aliCloudService.submitTrans(url);
+            conferenceRecordMapper.updateTaskId(id, task);
+            taskId = task;
+        }
+        String row = aliCloudService.getTrans(taskId);
+        String trans = DifyUtils.extractTextConcat(row);
+        String fileName = UUID.randomUUID() + ".txt";
+        File tempFile = null;
+        try {
+            tempFile = File.createTempFile(fileName, null);
+            try (FileWriter writer = new FileWriter(tempFile)) {
+                writer.write(trans);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        minioService.uploadTextFile(tempFile, fileName);
+        // FIXME
+        conferenceRecordMapper.updateTextById(id, fileName);
+    }
+
+    @Override
+    public ConferenceTimelineVO getTimeLine(Long id) {
+        ConferenceTimelineDTO conferenceTimelineDTO = conferenceRecordMapper.selectTimelineByConferenceId(id);
+        Conference conference = conferenceMapper.selectConferenceById(id);
+        LocalDateTime startTime = conference.getStartTime();
+        LocalDateTime endTime = conference.getEndTime();
+        String hasRecording = ConferenceTimelineConstants.NOT_DOING;
+        String hasTranscription = ConferenceTimelineConstants.NOT_DOING;
+        String hasMinutes = ConferenceTimelineConstants.NOT_DOING;
+        String hasMindMap = ConferenceTimelineConstants.NOT_DOING;
+        String recordingUrl = minioService.getSignedUrl(conferenceTimelineDTO.getVideo());
+        if (conferenceTimelineDTO.getVideo() != null && !conferenceTimelineDTO.getVideo().isEmpty()) {
+            hasRecording = ConferenceTimelineConstants.COMPLETED;
+        }
+        if (conferenceTimelineDTO.getText() != null && !conferenceTimelineDTO.getText().isEmpty()) {
+            hasTranscription = ConferenceTimelineConstants.COMPLETED;
+        }
+        if (conferenceTimelineDTO.getSummaryStatus().equals(ConferenceRecordConstants.DOING)) {
+            hasMinutes = ConferenceTimelineConstants.PROCESSING;
+        } else if (conferenceTimelineDTO.getSummaryStatus().equals(ConferenceRecordConstants.COMPLETED)) {
+            hasMinutes = ConferenceTimelineConstants.COMPLETED;
+        }
+        if (conferenceTimelineDTO.getMindMapStatus().equals(ConferenceRecordConstants.DOING)) {
+            hasMindMap = ConferenceTimelineConstants.PROCESSING;
+        } else if (conferenceTimelineDTO.getMindMapStatus().equals(ConferenceRecordConstants.COMPLETED)) {
+            hasMindMap = ConferenceTimelineConstants.COMPLETED;
+        }
+        return new ConferenceTimelineVO(startTime, endTime, hasRecording, hasTranscription, hasMinutes, hasMindMap, recordingUrl);
+    }
+
+    @Override
+    public String getSummary(Long id) {
+        return conferenceRecordMapper.getSummaryById(id);
+    }
+
+    @Override
+    public String getMindMap(Long id) {
+        return conferenceRecordMapper.getMindMapById(id);
+    }
+
+    @Override
+    public void generateMinutes(Long id) {
+        Integer status = conferenceRecordMapper.getSummaryStatusById(id);
+        if(status.equals(ConferenceRecordConstants.NOT_DOING) || status.equals(ConferenceRecordConstants.FAILED)) {
+            difyService.updateSummary(id);
+        }
+    }
+
+    @Override
+    public void generateMindMap(Long id) {
+        Integer status = conferenceRecordMapper.getMindMapStatusById(id);
+        if(status.equals(ConferenceRecordConstants.NOT_DOING) || status.equals(ConferenceRecordConstants.FAILED)) {
+            difyService.updateMindMap(id);
+        }
+    }
+
+
 }
