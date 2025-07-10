@@ -63,6 +63,8 @@ public class CourseController {
             course.setCourseCreateTime(now);
             course.setCourseUpdateTime(now);
 
+            course.setState(0);
+
             // 保存到数据库
             int result = courseMapper.addCourse(course);
 

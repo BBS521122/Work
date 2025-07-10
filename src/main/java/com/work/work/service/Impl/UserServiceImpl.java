@@ -59,7 +59,7 @@ public class UserServiceImpl implements UserService {
         String password = userLoginDTO.getPassword();
 
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(name, password);
-        Authentication authentication = null;
+        Authentication authentication;
         try {
             authentication = authenticationManager.authenticate(authenticationToken);
         } catch (AuthenticationException e) {
