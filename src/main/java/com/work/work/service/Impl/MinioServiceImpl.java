@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import com.work.work.properties.MinioProperties;
+
 import java.io.InputStream;
 import java.util.UUID;
 
@@ -66,6 +67,23 @@ public class MinioServiceImpl implements MinioService {
     }
 
     @Override
+    public InputStream getFile(String objectName) {
+        // 检查文件是否存在
+        if (!objectExists(objectName)) {
+            throw new RuntimeException("Avatar object not found");
+        }
+        try {
+            return minioClient.getObject(GetObjectArgs.builder()
+                    .bucket(minioProperties.getBucket())
+                    .object(objectName)
+                    .build());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    @Override
     public void deleteFile(String objectName) {
         try {
             minioClient.removeObject(RemoveObjectArgs.builder()
@@ -77,7 +95,7 @@ public class MinioServiceImpl implements MinioService {
         }
     }
 
-    private boolean objectExists(String objectName) {
+    boolean objectExists(String objectName) {
         try {
             minioClient.statObject(StatObjectArgs.builder()
                     .bucket(minioProperties.getBucket())
