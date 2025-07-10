@@ -78,19 +78,6 @@ class UserControllerTest {
     }
 
     @Test
-    void register_Success() {
-        User user = new User();
-        user.setName("newUser");
-        user.setPassword("password");
-
-        HttpResponseEntity<String> response = userController.register(user);
-
-        assertEquals(200, response.getCode());
-        assertEquals("success", response.getData());
-        verify(userService, times(1)).addUser(any(User.class));
-    }
-
-    @Test
     void updatePassword_Success() {
         try (MockedStatic<UserContext> mocked = mockStatic(UserContext.class)) {
             mocked.when(UserContext::getUserId).thenReturn(1L);

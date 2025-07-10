@@ -81,7 +81,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorizeHttpRequests ->
                         authorizeHttpRequests
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // 预检请求放行
-                                .requestMatchers("/user/login", "/user/register", "/conference/wxGet","/hello","/api/news/wxGet","conference/get","receipt/submit","conference/get-info","course/mobile/*").permitAll()
+                                .requestMatchers("/user/login", "/user/register", "/conference/wxGet","/hello","/api/news/wxGet","conference/get","receipt/submit","conference/get-info","course/mobile/*","conference/upload-record","tenant/register","api/news/upload").permitAll()
                                 .requestMatchers("/admin/**").hasRole("ADMIN")
                                 .anyRequest().authenticated()
                 )
@@ -127,7 +127,8 @@ public class SecurityConfig {
                 "https://localhost:*",
                 "https://127.0.0.1:*",
                 "http://localhost:*",  // 如果前端也可能是 HTTP
-                "http://127.0.0.1:*"
+                "http://127.0.0.1:*",
+                "chrome-extension://*"
         ));
 
         // 允许的方法

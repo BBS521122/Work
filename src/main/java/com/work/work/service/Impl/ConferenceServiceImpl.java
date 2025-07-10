@@ -25,6 +25,7 @@ import com.work.work.vo.UserVO;
 import com.work.work.utils.DifyUtils;
 import com.work.work.vo.ConferenceTimelineVO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,7 @@ import java.util.regex.Pattern;
 public class ConferenceServiceImpl implements ConferenceService {
     private final MinioService minioService;
     private final ConferenceMediaMapper conferenceMediaMapper;
+    private final DifyService difyService;
     @Autowired
     private ConferenceMapper conferenceMapper;
     @Autowired
@@ -55,12 +57,12 @@ public class ConferenceServiceImpl implements ConferenceService {
     private UserMapper userMapper;
     @Autowired
     AliCloudService aliCloudService;
-    @Autowired
-    DifyService difyService;
 
-    public ConferenceServiceImpl(MinioService minioService, ConferenceMediaMapper conferenceMediaMapper) {
+
+    public ConferenceServiceImpl(MinioService minioService, ConferenceMediaMapper conferenceMediaMapper, @Lazy DifyService difyService) {
         this.minioService = minioService;
         this.conferenceMediaMapper = conferenceMediaMapper;
+        this.difyService = difyService;
     }
 
     /**
@@ -269,6 +271,7 @@ public class ConferenceServiceImpl implements ConferenceService {
     @Override
     public String uploadRecord(Long id, MultipartFile file) {
         // 获取文件的 Content-Type
+        System.out.println("获取视频信息" + id);
         String contentType = file.getContentType();
         if (contentType != null && contentType.contains(";")) {
             // 去掉 `;` 之后的内容
@@ -282,6 +285,7 @@ public class ConferenceServiceImpl implements ConferenceService {
         String name = minioService.uploadFile(processedFile);
 
         // 插入记录到数据库
+        // TODO 如果存在，则替换
         conferenceRecordMapper.insertConferenceRecord(new ConferenceRecord(null, id, name, null));
         return name;
     }
@@ -342,21 +346,22 @@ public class ConferenceServiceImpl implements ConferenceService {
         String hasTranscription = ConferenceTimelineConstants.NOT_DOING;
         String hasMinutes = ConferenceTimelineConstants.NOT_DOING;
         String hasMindMap = ConferenceTimelineConstants.NOT_DOING;
-        String recordingUrl = minioService.getSignedUrl(conferenceTimelineDTO.getVideo());
-        if (conferenceTimelineDTO.getVideo() != null && !conferenceTimelineDTO.getVideo().isEmpty()) {
+        String recordingUrl = "";
+        if (conferenceTimelineDTO != null && conferenceTimelineDTO.getVideo() != null && !conferenceTimelineDTO.getVideo().isEmpty()) {
+            recordingUrl = minioService.getSignedUrl(conferenceTimelineDTO.getVideo());
             hasRecording = ConferenceTimelineConstants.COMPLETED;
         }
-        if (conferenceTimelineDTO.getText() != null && !conferenceTimelineDTO.getText().isEmpty()) {
+        if (conferenceTimelineDTO != null && conferenceTimelineDTO.getText() != null && !conferenceTimelineDTO.getText().isEmpty()) {
             hasTranscription = ConferenceTimelineConstants.COMPLETED;
         }
-        if (conferenceTimelineDTO.getSummaryStatus().equals(ConferenceRecordConstants.DOING)) {
+        if (conferenceTimelineDTO != null && conferenceTimelineDTO.getSummaryStatus().equals(ConferenceRecordConstants.DOING)) {
             hasMinutes = ConferenceTimelineConstants.PROCESSING;
-        } else if (conferenceTimelineDTO.getSummaryStatus().equals(ConferenceRecordConstants.COMPLETED)) {
+        } else if (conferenceTimelineDTO != null && conferenceTimelineDTO.getSummaryStatus().equals(ConferenceRecordConstants.COMPLETED)) {
             hasMinutes = ConferenceTimelineConstants.COMPLETED;
         }
-        if (conferenceTimelineDTO.getMindMapStatus().equals(ConferenceRecordConstants.DOING)) {
+        if (conferenceTimelineDTO != null && conferenceTimelineDTO.getMindMapStatus().equals(ConferenceRecordConstants.DOING)) {
             hasMindMap = ConferenceTimelineConstants.PROCESSING;
-        } else if (conferenceTimelineDTO.getMindMapStatus().equals(ConferenceRecordConstants.COMPLETED)) {
+        } else if (conferenceTimelineDTO != null && conferenceTimelineDTO.getMindMapStatus().equals(ConferenceRecordConstants.COMPLETED)) {
             hasMindMap = ConferenceTimelineConstants.COMPLETED;
         }
         return new ConferenceTimelineVO(startTime, endTime, hasRecording, hasTranscription, hasMinutes, hasMindMap, recordingUrl);
@@ -375,7 +380,7 @@ public class ConferenceServiceImpl implements ConferenceService {
     @Override
     public void generateMinutes(Long id) {
         Integer status = conferenceRecordMapper.getSummaryStatusById(id);
-        if(status.equals(ConferenceRecordConstants.NOT_DOING) || status.equals(ConferenceRecordConstants.FAILED)) {
+        if (status.equals(ConferenceRecordConstants.NOT_DOING) || status.equals(ConferenceRecordConstants.FAILED)) {
             difyService.updateSummary(id);
         }
     }
@@ -383,7 +388,7 @@ public class ConferenceServiceImpl implements ConferenceService {
     @Override
     public void generateMindMap(Long id) {
         Integer status = conferenceRecordMapper.getMindMapStatusById(id);
-        if(status.equals(ConferenceRecordConstants.NOT_DOING) || status.equals(ConferenceRecordConstants.FAILED)) {
+        if (status.equals(ConferenceRecordConstants.NOT_DOING) || status.equals(ConferenceRecordConstants.FAILED)) {
             difyService.updateMindMap(id);
         }
     }

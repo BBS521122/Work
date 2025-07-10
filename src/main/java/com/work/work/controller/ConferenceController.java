@@ -31,9 +31,9 @@ public class ConferenceController {
     @Autowired
     ConferenceConverter conferenceConverter;
     @Autowired
-    DifyService  difyService;
+    DifyService difyService;
     @Autowired
-    ConferenceRecordMapper  conferenceRecordMapper;
+    ConferenceRecordMapper conferenceRecordMapper;
     @Autowired
     AliCloudService aliCloudService;
 
@@ -62,7 +62,7 @@ public class ConferenceController {
      * @return
      */
     @PostMapping("/update")
-    public HttpResponseEntity<Integer> update(@RequestPart("data") ConferenceUpdateDTO conferenceUpdateDTO, @RequestPart(value = "cover",required = false) MultipartFile cover) {
+    public HttpResponseEntity<Integer> update(@RequestPart("data") ConferenceUpdateDTO conferenceUpdateDTO, @RequestPart(value = "cover", required = false) MultipartFile cover) {
         Conference conference = conferenceConverter.conferenceUpdateDTOToConference(conferenceUpdateDTO);
         Integer res = conferenceService.update(conference, cover, conferenceUpdateDTO.getUuid());
         return new HttpResponseEntity<>(200, res, "success");
@@ -76,8 +76,8 @@ public class ConferenceController {
      */
     @GetMapping("/get-info")
     public HttpResponseEntity<ConferenceGetDTO> getInfo(@RequestParam("id") Long id) {
-       ConferenceGetDTO res= conferenceService.getConferenceById(id);
-       return new HttpResponseEntity<>(200,res,"success");
+        ConferenceGetDTO res = conferenceService.getConferenceById(id);
+        return new HttpResponseEntity<>(200, res, "success");
     }
 
     /**
@@ -89,7 +89,7 @@ public class ConferenceController {
     @GetMapping("get-cover")
     public HttpResponseEntity<String> getCover(@RequestParam("id") Long id) {
         String res = conferenceService.getCover(id);
-       return new HttpResponseEntity<>(200,res,"success");
+        return new HttpResponseEntity<>(200, res, "success");
     }
 
     // TODO 优化分片上传 变大maxSize
@@ -115,14 +115,19 @@ public class ConferenceController {
         for (Long id : list) {
             res.add(conferenceService.getConference(id));
         }
+        return new HttpResponseEntity<>(200, res, "success");
+    }
+
     /**
      * 上传会议
+     *
      * @param id
      * @param file
      * @return
      */
     @PostMapping("/upload-record")
-    public HttpResponseEntity<String> uploadRecord(@RequestParam("id") Long id, @RequestParam("video") MultipartFile file) {
+    public HttpResponseEntity<String> uploadRecord(@RequestParam("id") Long
+                                                           id, @RequestParam("video") MultipartFile file) {
         String res = conferenceService.uploadRecord(id, file);
         return new HttpResponseEntity<>(200, res, "success");
     }
@@ -135,54 +140,54 @@ public class ConferenceController {
             res.add(conferenceService.getWxConference(id));
         }
         return new HttpResponseEntity<>(200, res, "success");
+    }
+
     @GetMapping("/get-record-text")
     public HttpResponseEntity<String> getRecordText(@RequestParam("id") Long id) {
         String res = conferenceService.getConferenceRecordTextById(id);
-        return new HttpResponseEntity<>(200,res,"success");
+        return new HttpResponseEntity<>(200, res, "success");
     }
 
     @GetMapping("/delete")
     public HttpResponseEntity<String> delete(@RequestParam("id") Long id) {
         String res = conferenceService.delete(id);
         return new HttpResponseEntity<>(200, res, "success");
-
-    @GetMapping("/timeline-status")
-    public HttpResponseEntity<ConferenceTimelineVO>  getTimelineStatus(@RequestParam("conferenceId") Long id) {
-        ConferenceTimelineVO res = conferenceService.getTimeLine(id);
-        return new HttpResponseEntity<>(200,res,"success");
     }
 
     @PostMapping("/approve")
     public HttpResponseEntity<String> approve(@RequestParam("id") Long id) {
         String res = String.valueOf(conferenceService.approve(id));
         return new HttpResponseEntity<>(200, res, "success");
+    }
+
     @GetMapping("/get-minutes")
     public HttpResponseEntity<String> getMinutes(@RequestParam("conferenceId") Long id) {
         String res = conferenceService.getSummary(id);
-        return new HttpResponseEntity<>(200,res,"success");
+        return new HttpResponseEntity<>(200, res, "success");
     }
 
     @GetMapping("/get-mindmap")
     public HttpResponseEntity<String> getMindMap(@RequestParam("conferenceId") Long id) {
         String res = conferenceService.getMindMap(id);
-        return new HttpResponseEntity<>(200,res,"success");
+        return new HttpResponseEntity<>(200, res, "success");
     }
 
-    @PostMapping("/generate-minutes")
+    @GetMapping("/generate-minutes")
     public HttpResponseEntity<String> generateMinutes(@RequestParam("conferenceId") Long id) {
         conferenceService.generateMinutes(id);
-        return new HttpResponseEntity<>(200,"success","success");
-    }
-    @PostMapping("/generate-mindmap")
-    public HttpResponseEntity<String> generateMindMap(@RequestParam("conferenceId") Long id) {
-        conferenceService.generateMindMap(id);
-        return new HttpResponseEntity<>(200,"success","success");
+        return new HttpResponseEntity<>(200, "success", "success");
     }
 
-    @PostMapping("/generate-transcription")
+    @GetMapping("/generate-mindmap")
+    public HttpResponseEntity<String> generateMindMap(@RequestParam("conferenceId") Long id) {
+        conferenceService.generateMindMap(id);
+        return new HttpResponseEntity<>(200, "success", "success");
+    }
+
+    @GetMapping("/generate-transcription")
     public HttpResponseEntity<String> generateTranscription(@RequestParam("conferenceId") Long id) {
         conferenceService.videoTrans(id);
-        return new HttpResponseEntity<>(200,"success","success");
+        return new HttpResponseEntity<>(200, "success", "success");
     }
 
 
@@ -194,30 +199,37 @@ public class ConferenceController {
 //            difyService.updateMindMap(id);
 //        }
         Integer status = conferenceRecordMapper.getSummaryStatusById(id);
-        if(status.equals(ConferenceRecordConstants.NOT_DOING) || status.equals(ConferenceRecordConstants.FAILED)) {
+        if (status.equals(ConferenceRecordConstants.NOT_DOING) || status.equals(ConferenceRecordConstants.FAILED)) {
             difyService.updateSummary(id);
         }
-        return new HttpResponseEntity<>(200,"2","success");
+        return new HttpResponseEntity<>(200, "2", "success");
     }
+
     @GetMapping("/test/upload")
     public HttpResponseEntity<String> testUpload(@RequestParam("id") Long id) {
         String video = conferenceRecordMapper.getVideoById(id);
         aliCloudService.uploadFile(video);
-        return new HttpResponseEntity<>(200,"2","success");
+        return new HttpResponseEntity<>(200, "2", "success");
 
     }
+
     @GetMapping("/test/url")
     public HttpResponseEntity<String> testUrl(@RequestParam("id") Long id) {
         String video = conferenceRecordMapper.getVideoById(id);
         String url = aliCloudService.getUrl(video);
-        return new HttpResponseEntity<>(200,url,"success");
+        return new HttpResponseEntity<>(200, url, "success");
 
     }
 
     @GetMapping("/test/trans")
     public HttpResponseEntity<String> testTrans(@RequestParam("id") Long id) {
         conferenceService.videoTrans(id);
-        return new HttpResponseEntity<>(200,"url","success");
+        return new HttpResponseEntity<>(200, "url", "success");
     }
 
+    @GetMapping("/timeline-status")
+    public HttpResponseEntity<ConferenceTimelineVO> getTimelineStatus(@RequestParam("conferenceId") Long id) {
+        ConferenceTimelineVO res = conferenceService.getTimeLine(id);
+        return new HttpResponseEntity<>(200, res, "success");
+    }
 }
