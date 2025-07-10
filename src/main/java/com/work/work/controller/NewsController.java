@@ -20,13 +20,13 @@ import java.util.*;
 @Configuration
 public class NewsController {
     @Value("${news.upload.dir}")
-    private String uploadDir;
+    String uploadDir;
 
     @Value("${news.url.prefix}")
-    private String urlPrefix;
+    String urlPrefix;
 
     @Autowired
-    private NewsService newsService;
+    NewsService newsService;
 
     @GetMapping("/wxGet")
     public HttpResponseEntity<List<News>> wxGet() {

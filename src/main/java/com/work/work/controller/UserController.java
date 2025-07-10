@@ -38,7 +38,7 @@ public class UserController {
     @PostMapping("/login")
     public HttpResponseEntity<UserLoginVO> login(@RequestBody UserLoginDTO userLoginDTO) {
         System.out.println(userLoginDTO.getName());
-        UserLoginVO userLoginVO = new UserLoginVO();
+        UserLoginVO userLoginVO;
         try {
             userLoginVO = userService.login(userLoginDTO);
             System.out.println(userLoginVO.getName());
