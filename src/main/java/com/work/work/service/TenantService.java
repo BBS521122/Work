@@ -10,6 +10,8 @@ public interface TenantService {
 
     Integer add(Tenant tenant, MultipartFile cover, String uuid);
 
+    Integer register(Tenant tenant);
+
     Integer update(Tenant tenant, MultipartFile cover, String uuid);
 
     TenantGetDTO getTenantById(Long id);

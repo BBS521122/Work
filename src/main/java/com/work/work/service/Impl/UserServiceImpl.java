@@ -59,12 +59,12 @@ public class UserServiceImpl implements UserService {
         String password = userLoginDTO.getPassword();
 
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(name, password);
-        Authentication authentication;
-        try {
-            authentication = authenticationManager.authenticate(authenticationToken);
-        } catch (AuthenticationException e) {
-            throw new RuntimeException(e);
-        }
+        Authentication authentication= authenticationManager.authenticate(authenticationToken);
+//        try {
+//            authentication = authenticationManager.authenticate(authenticationToken);
+//        } catch (AuthenticationException e) {
+//            throw new RuntimeException(e);
+//        }
         if (authentication == null) {
             System.out.println("Invalid name or password");
             throw new RuntimeException("Invalid name or password");

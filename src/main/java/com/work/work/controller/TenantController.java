@@ -51,6 +51,15 @@ public class TenantController {
         return new HttpResponseEntity<>(200, res, "success");
     }
 
+    @PostMapping("/register")
+    public HttpResponseEntity<Integer> register(@RequestBody TenantAddDTO tenantAddDTO) {
+        tenantAddDTO.setAdmin("admin");
+        Tenant tenant = tenantConverter.tenantAddDTOToTenant(tenantAddDTO);
+        Integer res = tenantService.register(tenant);
+        // 业务处理
+        return new HttpResponseEntity<>(200, res, "success");
+    }
+
     /**
      * 更新会议信息
      *

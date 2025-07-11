@@ -14,7 +14,7 @@ public interface UserMapper {
     @Select("select * from userData")
     User findAllUser();
 
-    @Select("select * from userData where name = 'admin'")
+    @Select("select * from userData where name = #{name}")
     User getUserByUsername(String name);
 
     @Select("select * from userData where id=#{id}")

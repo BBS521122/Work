@@ -47,6 +47,16 @@ public class TenantServiceImpl implements TenantService {
     }
 
     @Override
+    public Integer register(Tenant tenant) {
+        int res = tenantMapper.insertTenant(tenant);
+        if (res != 1) {
+            throw new RuntimeException("插入Tenant失败");
+        }
+        //绑定媒体
+        return res;
+    }
+
+    @Override
     @Transactional
     public Integer update(Tenant tenant, MultipartFile cover, String uuid) {
         // 根据 ID 获取旧的 Conference
