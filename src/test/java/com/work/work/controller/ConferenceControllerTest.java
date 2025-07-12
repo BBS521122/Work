@@ -179,4 +179,125 @@ class ConferenceControllerTest {
         assertEquals(String.valueOf(expected), response.getData());
         assertEquals("success", response.getMessage());
     }
+
+    @Test
+    void uploadRecord() throws Exception {
+        Long id = 1L;
+        MultipartFile file = new MockMultipartFile("video", "test.mp4", "video/mp4", "test".getBytes());
+        String expected = "upload-success";
+
+        when(conferenceService.uploadRecord(id, file)).thenReturn(expected);
+
+        HttpResponseEntity<String> response = conferenceController.uploadRecord(id, file);
+
+        assertEquals(200, response.getCode());
+        assertEquals(expected, response.getData());
+        assertEquals("success", response.getMessage());
+    }
+
+    @Test
+    void getRecordText() {
+        Long id = 1L;
+        String expected = "record-text";
+
+        when(conferenceService.getConferenceRecordTextById(id)).thenReturn(expected);
+
+        HttpResponseEntity<String> response = conferenceController.getRecordText(id);
+
+        assertEquals(200, response.getCode());
+        assertEquals(expected, response.getData());
+        assertEquals("success", response.getMessage());
+    }
+
+    @Test
+    void getMinutes() {
+        Long id = 1L;
+        String expected = "minutes-content";
+
+        when(conferenceService.getSummary(id)).thenReturn(expected);
+
+        HttpResponseEntity<String> response = conferenceController.getMinutes(id);
+
+        assertEquals(200, response.getCode());
+        assertEquals(expected, response.getData());
+        assertEquals("success", response.getMessage());
+    }
+
+    @Test
+    void getMindMap() {
+        Long id = 1L;
+        String expected = "mindmap-content";
+
+        when(conferenceService.getMindMap(id)).thenReturn(expected);
+
+        HttpResponseEntity<String> response = conferenceController.getMindMap(id);
+
+        assertEquals(200, response.getCode());
+        assertEquals(expected, response.getData());
+        assertEquals("success", response.getMessage());
+    }
+
+    @Test
+    void generateMinutes() {
+        Long id = 1L;
+
+        HttpResponseEntity<String> response = conferenceController.generateMinutes(id);
+
+        verify(conferenceService, times(1)).generateMinutes(id);
+        assertEquals(200, response.getCode());
+        assertEquals("success", response.getData());
+        assertEquals("success", response.getMessage());
+    }
+
+    @Test
+    void generateMindMap() {
+        Long id = 1L;
+
+        HttpResponseEntity<String> response = conferenceController.generateMindMap(id);
+
+        verify(conferenceService, times(1)).generateMindMap(id);
+        assertEquals(200, response.getCode());
+        assertEquals("success", response.getData());
+        assertEquals("success", response.getMessage());
+    }
+
+    @Test
+    void generateTranscription() {
+        Long id = 1L;
+
+        HttpResponseEntity<String> response = conferenceController.generateTranscription(id);
+
+        verify(conferenceService, times(1)).videoTrans(id);
+        assertEquals(200, response.getCode());
+        assertEquals("success", response.getData());
+        assertEquals("success", response.getMessage());
+    }
+
+    // 边界和异常测试示例
+    @Test
+    void getInfoWithInvalidId() {
+        Long invalidId = -1L;
+
+        when(conferenceService.getConferenceById(invalidId)).thenReturn(null);
+
+        HttpResponseEntity<ConferenceGetDTO> response = conferenceController.getInfo(invalidId);
+
+        assertEquals(200, response.getCode());
+        assertNull(response.getData());
+        assertEquals("success", response.getMessage());
+    }
+
+    @Test
+    void uploadMediaWithEmptyFile() throws Exception {
+        String uuid = "test-uuid";
+        MultipartFile emptyFile = new MockMultipartFile("file", new byte[0]);
+
+        when(conferenceService.uploadMedia(uuid, emptyFile)).thenReturn(null);
+
+        HttpResponseEntity<String> response = conferenceController.uploadMedia(uuid, emptyFile);
+
+        assertEquals(200, response.getCode());
+        assertNull(response.getData());
+        assertEquals("success", response.getMessage());
+    }
 }

@@ -301,4 +301,18 @@ public class TenantServiceImplTest {
         // 断言上传了新封面
         verify(minioService).uploadFile(newCover);
     }
+
+    @Test
+    void register_正常情况_返回成功() {
+        when(tenantMapper.insertTenant(any())).thenReturn(1);
+        Integer result = tenantService.register(tenant);
+        assertEquals(1, result);
+        verify(tenantMapper).insertTenant(tenant);
+    }
+
+    @Test
+    void register_插入失败_抛出异常() {
+        when(tenantMapper.insertTenant(any())).thenReturn(0);
+        assertThrows(RuntimeException.class, () -> tenantService.register(tenant));
+    }
 }

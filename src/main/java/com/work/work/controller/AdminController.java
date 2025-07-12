@@ -66,7 +66,6 @@ public class AdminController {
             if (users == null || users.isEmpty()) {
                 return new HttpResponseEntity<>(400, null, "导入数据不能为空");
             }
-
             // 数据校验
             List<String> errorMessages = new ArrayList<>();
             for (int i = 0; i < users.size(); i++) {
@@ -83,13 +82,10 @@ public class AdminController {
                 if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
                     errorMessages.add("第" + (i + 1) + "行：密码不能为空");
                 }
-                // 其他校验...
             }
-
             if (!errorMessages.isEmpty()) {
                 return new HttpResponseEntity<>(400, null, String.join("; ", errorMessages));
             }
-
             // 设置默认值
             Date now = new Date();
             users.forEach(user -> {
@@ -98,7 +94,6 @@ public class AdminController {
                     user.setState("正常"); // 默认启用
                 }
             });
-
             int successCount = adminService.batchAddUsers(users);
             return new HttpResponseEntity<>(200, successCount,
                     String.format("成功导入%d条数据，共%d条", successCount, users.size()));

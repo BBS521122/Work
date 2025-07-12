@@ -183,4 +183,24 @@ public class TenantControllerTest {
         assertTrue(response.getData().contains("Invalid ID format"));
         assertEquals("success", response.getMessage());
     }
+
+    @Test
+    public void testRegisterTenant() {
+        TenantAddDTO tenantAddDTO = new TenantAddDTO();
+        tenantAddDTO.setName("Test Tenant");
+
+        Tenant tenant = new Tenant();
+        tenant.setName("Test Tenant");
+        tenant.setAdmin("admin"); // 验证自动设置的admin字段
+
+        when(tenantConverter.tenantAddDTOToTenant(any(TenantAddDTO.class))).thenReturn(tenant);
+        when(tenantService.register(any(Tenant.class))).thenReturn(1);
+
+        HttpResponseEntity<Integer> response = tenantController.register(tenantAddDTO);
+
+        assertEquals(200, response.getCode());
+        assertEquals(1, response.getData());
+        assertEquals("admin", tenant.getAdmin()); // 关键断言
+    }
+
 }

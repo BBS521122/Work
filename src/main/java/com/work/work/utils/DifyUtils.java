@@ -53,6 +53,9 @@ public class DifyUtils {
     }
 
     public static String extractTextConcat(String json) {
+        if (json == null || json.isEmpty()) {
+            throw new IllegalArgumentException("JSON content cannot be null or empty");
+        }
         try {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(json);

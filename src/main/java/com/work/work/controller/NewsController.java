@@ -22,6 +22,7 @@ public class NewsController {
     @Value("${news.upload.dir}")
     String uploadDir;
 
+
     @Value("${news.url.prefix}")
     String urlPrefix;
 
@@ -51,7 +52,6 @@ public class NewsController {
 
             String filename = UUID.randomUUID().toString() + suffix;
             File destFile = new File(uploadDir, filename);
-
             // ✅ 写入文件
             file.transferTo(destFile);
 
