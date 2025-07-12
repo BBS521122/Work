@@ -33,8 +33,6 @@ class NewsControllerTest {
     void setUp() {
         // 初始化测试环境配置
         newsController.uploadDir = "test-upload";
-        newsController.uploadWxDir1 = "test-wx1";
-        newsController.uploadWxDir2 = "test-wx2";
         newsController.urlPrefix = "http://test/";
     }
 
@@ -65,7 +63,6 @@ class NewsControllerTest {
 
         // 使用Mock对象
         newsController.uploadDir = mockUploadDir.getPath();
-        newsController.uploadWxDir1 = mockWxDir.getPath();
 
         ResponseEntity<?> response = newsController.upload(file);
 
@@ -87,7 +84,6 @@ class NewsControllerTest {
 
         // 4. 注入Mock目录
         newsController.uploadDir = mockUploadDir.getPath();
-        newsController.uploadWxDir2 = mockWxDir.getPath();
 
         // 5. 执行测试
         ResponseEntity<?> response = newsController.upload(file);

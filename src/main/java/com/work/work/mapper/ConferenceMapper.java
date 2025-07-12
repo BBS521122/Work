@@ -62,7 +62,7 @@ public interface ConferenceMapper {
     @Update("UPDATE conference SET state = #{state} WHERE id = #{id}")
     int updateState(@Param("id") Long id, @Param("state") ConferenceStateEnum state);
 
-    @Select("select id from conference")
+    @Select("select id from conference where state ='COMPLETED'")
     List<Long> wxGet();
 
     @Select("SELECT name FROM conference WHERE id = #{id}")

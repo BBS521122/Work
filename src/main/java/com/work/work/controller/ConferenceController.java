@@ -135,6 +135,7 @@ public class ConferenceController {
     @GetMapping("/wxGet")
     public HttpResponseEntity<List<ConferenceWxDTO>> wxGet() {
         List<Long> list = conferenceService.wxGet();
+        System.out.println(list);
         List<ConferenceWxDTO> res = new ArrayList<>();
         for (Long id : list) {
             res.add(conferenceService.getWxConference(id));
@@ -227,9 +228,9 @@ public class ConferenceController {
 //        return new HttpResponseEntity<>(200, "url", "success");
 //    }
 //
-//    @GetMapping("/timeline-status")
-//    public HttpResponseEntity<ConferenceTimelineVO> getTimelineStatus(@RequestParam("conferenceId") Long id) {
-//        ConferenceTimelineVO res = conferenceService.getTimeLine(id);
-//        return new HttpResponseEntity<>(200, res, "success");
-//    }
+    @GetMapping("/timeline-status")
+    public HttpResponseEntity<ConferenceTimelineVO> getTimelineStatus(@RequestParam("conferenceId") Long id) {
+        ConferenceTimelineVO res = conferenceService.getTimeLine(id);
+        return new HttpResponseEntity<>(200, res, "success");
+    }
 }

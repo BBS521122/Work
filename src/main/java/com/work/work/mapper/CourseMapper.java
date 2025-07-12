@@ -36,9 +36,9 @@ public interface CourseMapper {
 
 
     @Insert("INSERT INTO course (course_name, course_description, course_author, " +
-            "course_sort, course_create_time, course_update_time,cover_url) " +
+            "course_sort, course_create_time, course_update_time,cover_url,state) " +
             "VALUES ( #{courseName}, #{courseDescription}, #{courseAuthor}, " +
-            "#{courseSort},#{courseCreateTime}, #{courseUpdateTime},#{coverUrl})")
+            "#{courseSort},#{courseCreateTime}, #{courseUpdateTime},#{coverUrl},#{state})")
     @Options(useGeneratedKeys = true, keyProperty = "id", keyColumn = "id")
     int addCourse(Course course);
 
