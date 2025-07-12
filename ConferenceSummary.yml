@@ -1,0 +1,232 @@
+app:
+  description: 根据会议文本生成会议纪要
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: ConferenceSummary
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/deepseek:0.0.6@dd589dc093c8084925858034ab5ec1fdf0d33819f43226c2f8c4a749a9acbbb2
+kind: app
+version: 0.3.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: document-extractor
+      id: 1751526622800-source-1751528333616-target
+      source: '1751526622800'
+      sourceHandle: source
+      target: '1751528333616'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: document-extractor
+        targetType: llm
+      id: 1751528333616-source-1751548501076-target
+      source: '1751528333616'
+      sourceHandle: source
+      target: '1751548501076'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: end
+      id: 1751548501076-source-1751528275883-target
+      source: '1751548501076'
+      sourceHandle: source
+      target: '1751528275883'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: 开始
+        type: start
+        variables:
+        - allowed_file_extensions: []
+          allowed_file_types:
+          - document
+          allowed_file_upload_methods:
+          - local_file
+          - remote_url
+          label: 纯文本
+          max_length: 48
+          options: []
+          required: true
+          type: file
+          variable: pure_text
+        - label: 标题
+          max_length: 256
+          options: []
+          required: true
+          type: text-input
+          variable: title
+      height: 115
+      id: '1751526622800'
+      position:
+        x: 69
+        y: 279
+      positionAbsolute:
+        x: 69
+        y: 279
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 243
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1751548501076'
+          - text
+          variable: res
+        selected: true
+        title: 结束
+        type: end
+      height: 89
+      id: '1751528275883'
+      position:
+        x: 977
+        y: 392
+      positionAbsolute:
+        x: 977
+        y: 392
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 243
+    - data:
+        desc: ''
+        is_array_file: false
+        selected: false
+        title: 文档提取器
+        type: document-extractor
+        variable_selector:
+        - '1751526622800'
+        - pure_text
+      height: 91
+      id: '1751528333616'
+      position:
+        x: 352
+        y: 464
+      positionAbsolute:
+        x: 352
+        y: 464
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 243
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - id: f0bc241f-4ab1-437e-939f-1bcce8c69db7
+          role: system
+          text: '你是一位擅长提炼会议内容的智能助手。请根据以下会议录音文本，生成一份清晰、结构化的会议纪要，包含以下要素：
+
+            - 会议主题
+
+            - 讨论的主要议题
+
+            - 每个议题的要点总结
+
+            - 决策事项
+
+            - 下一步行动计划（To-Do）和负责人
+
+            会议标题如下：{{#1751526622800.title#}}
+
+            会议原文如下：{{#1751528333616.text#}}
+
+            会议纪要格式为html'
+        selected: false
+        title: LLM
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 89
+      id: '1751548501076'
+      position:
+        x: 703
+        y: 522
+      positionAbsolute:
+        x: 703
+        y: 522
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 243
+    viewport:
+      x: 164.46499824992145
+      y: 134.5701793103346
+      zoom: 0.7578582832551991

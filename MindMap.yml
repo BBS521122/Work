@@ -1,0 +1,225 @@
+app:
+  description: ''
+  icon: 🤖
+  icon_background: '#FFEAD5'
+  mode: workflow
+  name: MindMap
+  use_icon_as_answer_icon: false
+dependencies:
+- current_identifier: null
+  type: marketplace
+  value:
+    marketplace_plugin_unique_identifier: langgenius/deepseek:0.0.6@dd589dc093c8084925858034ab5ec1fdf0d33819f43226c2f8c4a749a9acbbb2
+kind: app
+version: 0.3.0
+workflow:
+  conversation_variables: []
+  environment_variables: []
+  features:
+    file_upload:
+      allowed_file_extensions:
+      - .JPG
+      - .JPEG
+      - .PNG
+      - .GIF
+      - .WEBP
+      - .SVG
+      allowed_file_types:
+      - image
+      allowed_file_upload_methods:
+      - local_file
+      - remote_url
+      enabled: false
+      fileUploadConfig:
+        audio_file_size_limit: 50
+        batch_count_limit: 5
+        file_size_limit: 15
+        image_file_size_limit: 10
+        video_file_size_limit: 100
+        workflow_file_upload_limit: 10
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+      number_limits: 3
+    opening_statement: ''
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions: []
+    suggested_questions_after_answer:
+      enabled: false
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInLoop: false
+        sourceType: start
+        targetType: document-extractor
+      id: 1751699397675-source-1751699564231-target
+      source: '1751699397675'
+      sourceHandle: source
+      target: '1751699564231'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: document-extractor
+        targetType: llm
+      id: 1751699564231-source-1751699603764-target
+      source: '1751699564231'
+      sourceHandle: source
+      target: '1751699603764'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInLoop: false
+        sourceType: llm
+        targetType: end
+      id: 1751699603764-source-1751700072983-target
+      source: '1751699603764'
+      sourceHandle: source
+      target: '1751700072983'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: ''
+        selected: false
+        title: 开始
+        type: start
+        variables:
+        - allowed_file_extensions: []
+          allowed_file_types:
+          - document
+          allowed_file_upload_methods:
+          - local_file
+          - remote_url
+          label: 纯文本
+          max_length: 48
+          options: []
+          required: true
+          type: file
+          variable: pure_text
+        - label: 标题
+          max_length: 256
+          options: []
+          required: false
+          type: text-input
+          variable: title
+      height: 115
+      id: '1751699397675'
+      position:
+        x: -54
+        y: 251
+      positionAbsolute:
+        x: -54
+        y: 251
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 243
+    - data:
+        desc: ''
+        is_array_file: false
+        selected: false
+        title: 文档提取器
+        type: document-extractor
+        variable_selector:
+        - '1751699397675'
+        - pure_text
+      height: 91
+      id: '1751699564231'
+      position:
+        x: 258
+        y: 259
+      positionAbsolute:
+        x: 258
+        y: 259
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 243
+    - data:
+        context:
+          enabled: false
+          variable_selector: []
+        desc: ''
+        model:
+          completion_params:
+            temperature: 0.7
+          mode: chat
+          name: deepseek-chat
+          provider: langgenius/deepseek/deepseek
+        prompt_template:
+        - role: system
+          text: "现在有会议名为{{#1751699397675.title#}}的会议，阅读会议文本{{#1751699564231.text#}}创建一个思维导图数据结构，要求如下：\n\
+            数据格式：\n严格按照以下JSON格式生成，包含完整的3级子层级：\njson\n{\n  \"id\": \"Root Topic\",\n\
+            \  \"children\": [\n    {\n      \"id\": \"Level 1 Branch\",\n      \"\
+            children\": [\n        {\n          \"id\": \"Level 2 Category\",\n  \
+            \        \"children\": [\n            { \"id\": \"Level 3 Specific Item\"\
+            \ },\n            { \"id\": \"Level 3 Specific Item\" }\n          ]\n\
+            \        }\n      ]\n    }\n  ]\n}\n结构规则：\n总层级为4级：根节点 → 第1级 → 第2级 → 第3级\n\
+            第1级主分支建议3-6个\n每个第1级分支下包含2-5个第2级分类\n每个第2级分类下包含2-6个第3级具体项\n第3级应为具体的、可操作的条目\n\
+            标题简洁明了（不超过20字符）\n内容要求：\n第1级：主要类别或主题\n第2级：子类别或功能领域\n第3级：具体项、工具、方法或示例\n\
+            确保逻辑层次清晰，分组合理\n兼顾全面性与清晰性\n注意：仅返回JSON数据，无需额外说明。"
+        selected: false
+        structured_output_enabled: true
+        title: LLM
+        type: llm
+        variables: []
+        vision:
+          enabled: false
+      height: 89
+      id: '1751699603764'
+      position:
+        x: 610
+        y: 288
+      positionAbsolute:
+        x: 610
+        y: 288
+      selected: true
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 243
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1751699603764'
+          - text
+          variable: res
+        selected: true
+        title: 结束
+        type: end
+      height: 89
+      id: '1751700072983'
+      position:
+        x: 936
+        y: 305
+      positionAbsolute:
+        x: 936
+        y: 305
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 243
+    viewport:
+      x: 299.1918295019236
+      y: 138.1940929319942
+      zoom: 0.7578582832551992
