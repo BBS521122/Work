@@ -37,31 +37,31 @@ public class AdminServiceImplTest {
 
     @Mock
     private UserMapper userMapper;
-    
+
     @Mock
     private AdminMapper adminMapper;
-    
+
     @Mock
     private PasswordEncoder passwordEncoder;
-    
+
     @Mock
     private TenantConverter tenantConverter;
-    
+
     @Mock
     private TenantMapper tenantMapper;
-    
+
     @Mock
     private TenantMediaMapper tenantMediaMapper;
-    
+
     @Mock
     private MinioService minioService;
-    
+
     @Mock
     private TenantService tenantService;
-    
+
     @InjectMocks
     private AdminServiceImpl adminService;
-    
+
     private User validUser;
     private StateVO validStateVO;
     private UserQueryDTO validQueryDTO;
@@ -74,11 +74,11 @@ public class AdminServiceImplTest {
         validUser.setId(1L);
         validUser.setName("testUser");
         validUser.setPassword("password123");
-        
+
         validStateVO = new StateVO();
         validStateVO.setId(1L);
         validStateVO.setState("正常");
-        
+
         validQueryDTO = new UserQueryDTO();
         validQueryDTO.setName("testUser");
         tenant = new Tenant();
@@ -91,9 +91,9 @@ public class AdminServiceImplTest {
     void addUser_WithValidUser_ShouldReturnSuccess() {
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
         when(userMapper.insert(any())).thenReturn(1);
-        
+
         int result = adminService.addUser(validUser);
-        
+
         assertEquals(1, result);
         verify(passwordEncoder).encode("password123");
         verify(userMapper).insert(validUser);
@@ -109,9 +109,9 @@ public class AdminServiceImplTest {
     @Test
     void updateUser_WithValidUser_ShouldReturnSuccess() {
         when(userMapper.updateUser(any())).thenReturn(1);
-        
+
         int result = adminService.updateUser(validUser);
-        
+
         assertEquals(1, result);
         verify(userMapper).updateUser(validUser);
     }
@@ -125,9 +125,9 @@ public class AdminServiceImplTest {
     @Test
     void deleteUser_WithValidId_ShouldReturnSuccess() {
         when(userMapper.deleteUser(anyLong())).thenReturn(1);
-        
+
         int result = adminService.deleteUser(1L);
-        
+
         assertEquals(1, result);
         verify(userMapper).deleteUser(1L);
     }
@@ -135,7 +135,7 @@ public class AdminServiceImplTest {
     @Test
     void deleteUser_WithNegativeId_ShouldReturnZero() {
         int result = adminService.deleteUser(-1L);
-        
+
         assertEquals(0, result);
     }
 
@@ -145,11 +145,11 @@ public class AdminServiceImplTest {
         UserVO userVO = new UserVO();
         userVO.setId(1L);
         userVO.setName("testUser");
-        
+
         when(adminMapper.queryUsers(any())).thenReturn(Collections.singletonList(userVO));
-        
+
         var result = adminService.getUser(validQueryDTO, 1, 10);
-        
+
         assertNotNull(result);
         assertEquals(1, result.getList().size());
         assertEquals("testUser", result.getList().get(0).getName());
@@ -158,7 +158,7 @@ public class AdminServiceImplTest {
     @Test
     void getUser_WithNullQuery_ShouldReturnEmptyList() {
         var result = adminService.getUser(null, 1, 10);
-        
+
         assertNotNull(result);
         assertTrue(result.getList().isEmpty());
     }
@@ -169,18 +169,18 @@ public class AdminServiceImplTest {
         User user1 = new User();
         user1.setName("user1");
         user1.setPassword("pass1");
-        
+
         User user2 = new User();
         user2.setName("user2");
         user2.setPassword("pass2");
-        
+
         when(userMapper.getUserByUsername("user1")).thenReturn(null);
         when(userMapper.getUserByUsername("user2")).thenReturn(null);
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
         when(userMapper.insert(any())).thenReturn(1);
-        
+
         int result = adminService.batchAddUsers(Arrays.asList(user1, user2));
-        
+
         assertEquals(2, result);
         verify(userMapper, times(2)).insert(any());
     }
@@ -190,11 +190,11 @@ public class AdminServiceImplTest {
         User user1 = new User();
         user1.setName("user1");
         user1.setPassword("pass1");
-        
+
         when(userMapper.getUserByUsername("user1")).thenReturn(new User());
-        
+
         int result = adminService.batchAddUsers(Collections.singletonList(user1));
-        
+
         assertEquals(0, result);
         verify(userMapper, never()).insert(any());
     }

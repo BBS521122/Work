@@ -320,6 +320,9 @@ public class ConferenceServiceImpl implements ConferenceService {
             taskId = task;
         }
         String row = aliCloudService.getTrans(taskId);
+        if (row == null || row.isEmpty()) {
+            throw new IllegalStateException("Failed to get transcription result");
+        }
         String trans = DifyUtils.extractTextConcat(row);
         String fileName = UUID.randomUUID() + ".txt";
         File tempFile = null;

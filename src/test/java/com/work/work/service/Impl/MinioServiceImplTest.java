@@ -12,8 +12,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.file.Files;
 import java.time.Duration;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -135,6 +135,7 @@ class MinioServiceImplTest {
                 () -> ReflectionTestUtils.invokeMethod(minioService, "objectExists", "error.txt"));
         assertTrue(ex.getMessage().contains("错误"));
     }
+
     @Test
     void objectExists_ErrorResponseException_OtherCode() throws Exception {
         when(minioProperties.getBucket()).thenReturn("test-bucket");
@@ -147,5 +148,55 @@ class MinioServiceImplTest {
         RuntimeException thrown = assertThrows(RuntimeException.class, () ->
                 ReflectionTestUtils.invokeMethod(minioService, "objectExists", "error.txt"));
         assertTrue(thrown.getMessage().contains("错误"));
+    }
+
+    @Test
+    void uploadTextFile_Success() throws Exception {
+        File file = File.createTempFile("test", ".txt");
+        file.deleteOnExit();
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            fos.write("test content".getBytes());
+        }
+
+        when(minioProperties.getBucket()).thenReturn("test-bucket");
+        when(minioProperties.getPartSize()).thenReturn(5 * 1024 * 1024L);
+        when(minioClient.putObject(any(PutObjectArgs.class))).thenReturn(mock(ObjectWriteResponse.class));
+
+        String result = minioService.uploadTextFile(file, "custom-name.txt");
+        assertNotNull(result);
+        verify(minioClient).putObject(argThat(args ->
+                {
+                    try {
+                        return args.object().equals("custom-name.txt") &&
+                                args.contentType().equals("text/plain");
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+        ));
+    }
+
+
+
+
+    @Test
+    void getFile_ObjectNotExist() {
+        String objectName = "notfound.txt";
+        MinioServiceImpl spyService = Mockito.spy(minioService);
+        doReturn(false).when(spyService).objectExists(objectName);
+        assertThrows(RuntimeException.class, () -> spyService.getFile(objectName));
+    }
+
+    @Test
+    void getFile_DownloadException() throws Exception {
+        String objectName = "test.txt";
+        MinioServiceImpl spyService = Mockito.spy(minioService);
+        doReturn(true).when(spyService).objectExists(objectName);
+
+        when(minioProperties.getBucket()).thenReturn("test-bucket");
+        when(minioClient.getObject(any(GetObjectArgs.class)))
+                .thenThrow(new RuntimeException("download fail"));
+
+        assertThrows(RuntimeException.class, () -> spyService.getFile(objectName));
     }
 }

@@ -60,11 +60,6 @@ public class UserServiceImpl implements UserService {
 
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(name, password);
         Authentication authentication= authenticationManager.authenticate(authenticationToken);
-//        try {
-//            authentication = authenticationManager.authenticate(authenticationToken);
-//        } catch (AuthenticationException e) {
-//            throw new RuntimeException(e);
-//        }
         if (authentication == null) {
             System.out.println("Invalid name or password");
             throw new RuntimeException("Invalid name or password");
@@ -130,17 +125,14 @@ public class UserServiceImpl implements UserService {
         try {
             // 1. 获取旧头像名称
             oldName = userMapper.getAvatarById(id);
-
             // 2. 上传新头像
             newName = minioService.uploadFile(file);
-
             // 3. 更新数据库记录
             if (userMapper.updateAvatarById(id, newName) <= 0) {
                 // 数据库更新失败，删除新上传的头像
                 minioService.deleteFile(newName);
                 throw new RuntimeException("更新用户头像信息失败");
             }
-
             // 4. 删除旧头像（放在最后执行，失败不影响主流程）
             if (oldName != null && !oldName.isEmpty()) {
                 try {
@@ -149,7 +141,6 @@ public class UserServiceImpl implements UserService {
                     // 记录日志，忽略异常
                 }
             }
-
             return minioService.getSignedUrl(newName);
         } catch (Exception e) {
             // 如果上传新头像后出现异常，尝试删除新头像

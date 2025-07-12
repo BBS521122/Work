@@ -30,7 +30,7 @@ public class HttpsConfig {
      * @author LiuMingFu
      * @date 2025/2/14
      */
-    private Connector httpConnector() {
+    Connector httpConnector() {
         Connector connector = new Connector("org.apache.coyote.http11.Http11NioProtocol");
         connector.setScheme("http");
         connector.setPort(8080);  // HTTP端口

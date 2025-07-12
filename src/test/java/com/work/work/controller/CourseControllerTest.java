@@ -671,4 +671,110 @@ class CourseControllerTest {
         assertTrue(response.getBody().get("message").toString().contains("拒绝失败"));
         verify(courseMapper, times(1)).updateAuditStatus(courseId.intValue(), 2);
     }
+
+    @Test
+    void getMobileCourses_Success() {
+        // 准备测试数据
+        Course course1 = new Course();
+        course1.setId(1L);
+        course1.setCourseName("Test Course 1");
+        course1.setCourseDescription("Description 1");
+        course1.setCourseAuthor("Author 1");
+        course1.setCoverUrl("cover1.jpg");
+
+        Course course2 = new Course();
+        course2.setId(2L);
+        course2.setCourseName("Test Course 2");
+        course2.setCourseDescription("Description 2");
+        course2.setCourseAuthor("Author 2");
+        course2.setCoverUrl(null);
+
+        when(courseMapper.getMobileCourses()).thenReturn(Arrays.asList(course1, course2));
+        when(minioService.getSignedUrl("cover1.jpg")).thenReturn("signed_cover1.jpg");
+
+        // 测试不带查询条件
+        HttpResponseEntity<List<CourseOverviewMobileVO>> response = courseController.getMobileCourses("");
+
+        assertEquals(200, response.getCode());
+        assertEquals(2, response.getData().size());
+        assertEquals("signed_cover1.jpg", response.getData().get(0).getCoverUrl());
+        assertNull(response.getData().get(1).getCoverUrl());
+        assertEquals("success", response.getMessage());
+
+        // 测试带查询条件
+        response = courseController.getMobileCourses("test");
+        assertEquals(200, response.getCode());
+        assertTrue(response.getData().size() <= 2);
+    }
+
+    @Test
+    void getMobileCourses_Exception() {
+        when(courseMapper.getMobileCourses()).thenThrow(new RuntimeException("DB Error"));
+
+        HttpResponseEntity<List<CourseOverviewMobileVO>> response = courseController.getMobileCourses("");
+
+        assertEquals(500, response.getCode());
+        assertNull(response.getData());
+        assertTrue(response.getMessage().contains("服务器错误"));
+    }
+
+    @Test
+    void getCourseInfoMobile_Success() {
+        Long courseId = 1L;
+
+        // 准备课程数据
+        Course course = new Course();
+        course.setId(courseId);
+        course.setCourseName("Test Course");
+        course.setCourseDescription("Description");
+
+        // 准备章节数据
+        Chapter chapter1 = new Chapter();
+        chapter1.setOrder(1);
+        chapter1.setName("Chapter 1");
+        chapter1.setVideoUrl("video1.mp4");
+
+        Chapter chapter2 = new Chapter();
+        chapter2.setOrder(2);
+        chapter2.setName("Chapter 2");
+        chapter2.setVideoUrl(null);
+
+        when(courseMapper.getMobileCourseInfo(courseId)).thenReturn(course);
+        when(chapterMapper.getChaptersByCourseId(courseId)).thenReturn(Arrays.asList(chapter1, chapter2));
+        when(minioService.getSignedUrl("video1.mp4")).thenReturn("signed_video1.mp4");
+
+        HttpResponseEntity<CourseInfoMobileVO> response = courseController.getCourseInfoMobile(courseId);
+
+        assertEquals(200, response.getCode());
+        assertEquals("Test Course", response.getData().getTitle());
+        assertEquals(2, response.getData().getList().size());
+        assertEquals("signed_video1.mp4", response.getData().getList().get(0).getVideoUrl());
+        assertNull(response.getData().getList().get(1).getVideoUrl());
+        assertEquals("success", response.getMessage());
+    }
+
+    @Test
+    void getCourseInfoMobile_NotFound() {
+        Long courseId = 1L;
+        when(courseMapper.getMobileCourseInfo(courseId)).thenReturn(null);
+
+        HttpResponseEntity<CourseInfoMobileVO> response = courseController.getCourseInfoMobile(courseId);
+
+        assertEquals(404, response.getCode());
+        assertNull(response.getData());
+        assertEquals("课程不存在或未通过审核", response.getMessage());
+    }
+
+    @Test
+    void getCourseInfoMobile_Exception() {
+        Long courseId = 1L;
+        when(courseMapper.getMobileCourseInfo(courseId)).thenThrow(new RuntimeException("DB Error"));
+
+        HttpResponseEntity<CourseInfoMobileVO> response = courseController.getCourseInfoMobile(courseId);
+
+        assertEquals(500, response.getCode());
+        assertNull(response.getData());
+        assertTrue(response.getMessage().contains("服务器错误"));
+    }
+
 }
